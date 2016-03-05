@@ -29,7 +29,8 @@ translate([0,peg_thick,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) 
 
 //simple slope!
 rotate([-90,0,0])
-mirror([1,0,0]) slope_module();
+//mirror([1,0,0])
+slope_module();
 translate([in*5,0,-in*1]) 
 slope_module();
 
