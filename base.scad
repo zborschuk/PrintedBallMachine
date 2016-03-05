@@ -22,16 +22,20 @@ inlet_z = in*1;
 
 //outlet variables
 
+track_slice();
+
 %pegboard();
 
 //peg for printing
 translate([0,peg_thick,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90]) peg();
 
 //simple slope!
-!rotate([-90,0,0])
+rotate([-90,0,0])
 mirror([1,0,0]) slope_module();
 translate([in*5,0,-in*1]) 
 slope_module();
+
+inlet();
 
 //the size is the X and Y number of holes in the peg board.
 //This is meant to be used as a visual reference when designing your module.
@@ -51,14 +55,13 @@ module slope_module(size = [4, -.5]){
     difference(){
         union(){
             inlet(height=3);
-            hanger(solid=1, hole=[1,4], drop = in/2);
-            translate([in*7/8,0,in*2]) track(rise=(size[1]*1.2)*in, run=(size[0]*1.2)*in, solid=1, hanger=0);
+            
+            translate([in*7/8,0,in*2]) track(rise=(size[1]*1.2)*in, run=(size[0]*1.2)*in, solid=1, end_angle=90);
             hanger(solid=1, hole=[5,3], drop = in/2);
         }
         //hole in the inlet
         translate([in*7/8,0,in*2]) track(rise=size[1], run=size[0], solid=-1, hanger=0, extra=in/2);
         
-        hanger(solid=-1, hole=[1,4], drop = in/2);
         hanger(solid=-1, hole=[5,3], drop = in/2);
 
 		  //make the end flat
@@ -74,10 +77,16 @@ module inlet(height = 1){
     
     translate([0,-inlet_y,height*in-inlet_z])
     difference(){
-        union() hull(){
-            cube([inlet_x-inset,inlet_y,.1]);
-            translate([0,0,inlet_z-.1-4.5]) rotate([0,-10,0]) cube([inlet_x,inlet_y,.1]);
-            //%translate([0,0,inlet_z-.1]) cube([inlet_x,inlet_y,.1]);
+        union() {
+            hull(){
+                cube([inlet_x-inset,inlet_y,.1]);
+                translate([0,0,inlet_z-.1-4.5]) rotate([0,-10,0]) cube([inlet_x,inlet_y,.1]);
+                //%translate([0,0,inlet_z-.1]) cube([inlet_x,inlet_y,.1]);
+            }
+            translate([0,inlet_y,-in+inlet_z]) difference(){
+                hanger(solid=1, hole=[1,2], drop = in/2);
+                hanger(solid=-1, hole=[1,2], drop = in/2);
+            }
         }
         
         //hollow center
@@ -186,9 +195,6 @@ module peg(){
     }
 }
 
-module outlet(height = 2){
-}
-
 module hanger(solid=0, hole=[1,4], slot_size = 0, drop = in/2){
     offset = (track_rad+wall);
     
@@ -212,50 +218,42 @@ module hanger(solid=0, hole=[1,4], slot_size = 0, drop = in/2){
     }
 }
 
-module track_hangers(length=30, angle=10, solid=0, slot_size = peg_sep/2){
-    offset = (track_rad+wall);
-    
-    if(solid >= 0) union(){
-        //left (hole) side
-        translate([peg_sep/2,peg_sep/2,0]){
-            hull(){
-                translate([0,0,peg_sep/2]) rotate([90,0,0]) cylinder(r=peg_rad+wall*2, h=wall);
-                translate([0,0,0]) rotate([90,0,0]) rotate([0,0,22.5]) cylinder(r=peg_rad+wall, h=wall, $fn=8);
+//track trough
+module track_trough(angle=0, length=1, ta=240){
+    difference(){
+            union(){
+                rotate([0,angle,0]) difference(){
+                    %translate([length,0,0]) translate([0,0,ball_rad-track_rad]) sphere(r=ball_rad);
+                    
+                    rotate([0,90,0]) rotate([0,0,22.5]) cylinder(r=(track_rad+wall)/cos(180/8), h=length, $fn=8);
+                    translate([-.5,0,0]) {
+                        rotate([45,0,0]) cube([length+1, track_rad+wall*2, ball_rad+wall*2]);
+                        for(i=[0,1]) mirror([0,i,0]) {
+                            rotate([ta/2,0,0])  translate([0,0,-wall*2]) cube([length+1, track_rad+wall*2, track_rad+wall*2]);
+                            translate([0,0,wall/2]) cube([length+1, track_rad+wall*2, track_rad+wall*2]);
+                        }
+                    }
+                }
             }
-            
-            //lower support
-            rotate([0,angle,0]) translate([0,0,-offset+peg_rad+wall]) rotate([90,0,0]) rotate([0,0,22.5]) cylinder(r=(peg_rad+wall)/cos(180/8), h=peg_sep-wall, $fn=8);
-        }
         
-        //right (slot) side
-        translate([peg_sep/2,-peg_sep/2,0]) rotate([0,angle,0]) translate([-peg_sep/2,+peg_sep/2,0]) translate([length-peg_sep/2,peg_sep/2,0]){
-            rotate([0,-angle,0]) hull(){
-                translate([-slot_size/2,0,peg_sep/2]) rotate([90,0,0]) cylinder(r=peg_rad+wall*2, h=wall);
-                translate([slot_size/2,0,peg_sep/2]) rotate([90,0,0]) cylinder(r=peg_rad+wall*2, h=wall);
-                
-                rotate([90,0,0]) rotate([0,0,22.5]) cylinder(r=peg_rad+wall, h=wall, $fn=8);
-            }
-            
-            //lower support
-            translate([0,0,-offset+peg_rad+wall]) rotate([90,0,0]) rotate([0,0,22.5]) cylinder(r=(peg_rad+wall)/cos(180/8), h=peg_sep-wall, $fn=8);
+            //ball path
+            translate([-.5,0,0]) rotate([0,angle,0]) rotate([0,90,0]) cylinder(r=track_rad, h=length+2);
         }
-    }
-    
-    if(solid <= 0){
-        //left (peg) side
-        for(i=[0,1]) translate([peg_sep/2,peg_sep/2,peg_sep/2]) rotate([90,0,0]) translate([0,0,wall/2]) mirror([0,0,i]) translate([0,0,-.05]) cylinder(r1=peg_rad+slop, r2=peg_rad+wall, h=wall);
-        
-        //right (slot) side
-		  translate([peg_sep/2,-peg_sep/2,0]) rotate([0,angle,0]) translate([-peg_sep/2,+peg_sep/2,0]) translate([length-peg_sep/2,peg_sep/2,0]){
-            rotate([0,-angle,0]) for(i=[0:1]) hull(){
-                translate([-slot_size/2,0,peg_sep/2]) rotate([90,0,0]) translate([0,0,wall/2]) mirror([0,0,i]) translate([0,0,-.05]) cylinder(r1=peg_rad+slop, r2=peg_rad+wall, h=wall);
-                translate([slot_size/2,0,peg_sep/2]) rotate([90,0,0]) translate([0,0,wall/2]) mirror([0,0,i]) translate([0,0,-.05]) cylinder(r1=peg_rad+slop, r2=peg_rad+wall, h=wall);
-            }
-		}
+}
+
+//a 2d cross section of the track.  Used to make curves.
+module track_slice(){
+    projection() translate([0,0,1]) rotate([0,90,0]) track_trough(length=2);
+}
+
+
+module track_curve(){
+    rotate_extrude(convexity=10){
+        #rotate([0,0,90]) translate([0,in/2,0]) track_slice();
     }
 }
 
-//straight section of track.
+//section of track.
 //Length is in mm.
 //Start is at 0 (move it where you want it) end is length units away horizontally, at the specified angle.
 //rise and run are both inches - length and angle are calculated from them.
@@ -264,7 +262,7 @@ module track_hangers(length=30, angle=10, solid=0, slot_size = peg_sep/2){
 //solid = -1: draw the marble path - useful for making holes in things.
 //
 //start/end dictate the angle at the end of the track.  This is a 1" radius, period - defaults to 0, which is straight; angles over 90 or under -90 result in +/-90.
-module track(rise=-in, run=in*5, hanger=1, solid=1, track_angle=120, start=0, end=90, extra = in){
+module track(rise=-in, run=in*5, solid=1, track_angle=120, start=0, end_angle=0, extra = in){
 
 	 angle = -atan(rise/run);
 
@@ -276,27 +274,14 @@ module track(rise=-in, run=in*5, hanger=1, solid=1, track_angle=120, start=0, en
     
     translate([0,0,track_rad+wall])
     if(solid>=0){
-        %translate([0,-peg_sep/2,0]) translate([0,0,ball_rad-track_rad]) sphere(r=ball_rad);
-        translate([0,-peg_sep*.5,0]) difference(){
-            union(){
-                rotate([0,angle,0]) difference(){
-                    %translate([length,0,0]) translate([0,0,ball_rad-track_rad]) sphere(r=ball_rad);
-                    
-                    rotate([0,90,0]) rotate([0,0,22.5]) cylinder(r=(track_rad+wall)/cos(180/8), h=length, $fn=8);
-                    translate([-.5,0,0]) {
-                        rotate([45,0,0]) cube([length+1, track_rad+wall*2, ball_rad+wall*2]);
-                        for(i=[0,1]) mirror([0,i,0]) rotate([ta/2,0,0]) translate([0,0,-wall*2]) cube([length+1, track_rad+wall*2, track_rad+wall*2]);
-                    }
-                }
-                if(hanger==1)
-                    track_hangers(length=length, angle=angle, solid=1);
-            }
-        
-            //ball path
-            translate([-.5,0,0]) rotate([0,angle,0]) rotate([0,90,0]) cylinder(r=track_rad, h=length+2);
+        union(){
+            %translate([0,-peg_sep/2,0]) translate([0,0,ball_rad-track_rad]) sphere(r=ball_rad);
+            translate([0,-peg_sep*.5,0]) track_trough(angle, length, ta);
             
-            if(hanger==1){
-                track_hangers(length=length, angle=angle, solid=-1);
+            #rotate([0,angle,0]) translate([length,0,0]) translate([-peg_sep/2,-peg_sep, -peg_sep/2]) cube([peg_sep, peg_sep, peg_sep]);
+            
+            if(end_angle > 0){
+                
             }
         }
         
