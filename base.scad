@@ -54,11 +54,14 @@ module slope_module(size = [4, -.5]){
         union(){
             inlet(height=3);
             
-            translate([in*7/8,0,in*2]) track(rise=(size[1]*1.2)*in, run=(size[0]*1.2)*in, solid=1, end_angle=90);
+            translate([in*7/8,0,in*2]) track(rise=(size[1]*1.1)*in, run=(size[0]*1.1)*in, solid=1, end_angle=0);
             hanger(solid=1, hole=[5,3], drop = in/2);
         }
         //hole in the inlet
-        translate([in*7/8,0,in*2]) track(rise=size[1], run=size[0], solid=-1, hanger=0, extra=in/2);
+        translate([in*7/8,0,in*2]) track(rise=size[1], run=size[0], solid=-1, hanger=0, extra_len=in*.7);
+
+		  //cut the end flat
+		  translate([50+in*size[0]+in,0,in*2]) cube([100,100,100], center=true);
         
         hanger(solid=-1, hole=[5,3], drop = in/2);
     }
@@ -248,12 +251,12 @@ module track_curve(angle=45){
         translate([0,0,-peg_sep/2-.5]) cube([peg_sep+1, peg_sep+1, peg_sep+1]);
         translate([0,0,-peg_sep/2-.5]) rotate([0,0,angle]) cube([peg_sep, peg_sep, peg_sep]);
         rotate_extrude(convexity=10){
-            rotate([0,0,90]) translate([0,in/2+1,0]) track_slice();
+            rotate([0,0,90]) translate([0,in/2+.1,0]) track_slice();
         }
     }
 }
 
-translate([0,0,in*3]) track(end_angle = 45);
+translate([0,0,in*3]) track(end_angle = 90);
 
 track_curve();
 
@@ -266,7 +269,7 @@ track_curve();
 //solid = -1: draw the marble path - useful for making holes in things.
 //
 //start/end dictate the angle at the end of the track.  This is a 1" radius, period - defaults to 0, which is straight; angles over 90 or under -90 result in +/-90.
-module track(rise=-in, run=in*5, solid=1, track_angle=120, start=0, end_angle=.1, extra = in){
+module track(rise=-in, run=in*5, solid=1, track_angle=120, start=0, end_angle=0, extra_len = in){
 
 	 angle = -atan(rise/run);
 
@@ -281,7 +284,7 @@ module track(rise=-in, run=in*5, solid=1, track_angle=120, start=0, end_angle=.1
     end_subtract = sin(end_angle)*(track_rad+wall)*2;
     echo(end_subtract);
     
-    translate([0,0,track_rad+wall+20])
+    translate([0,0,track_rad+wall])
     if(solid>=0){
         difference(){
             union(){
@@ -290,16 +293,16 @@ module track(rise=-in, run=in*5, solid=1, track_angle=120, start=0, end_angle=.1
             
                 //#rotate([0,angle,0]) translate([length+extra,0,0]) translate([-peg_sep,-peg_sep, -peg_sep/2]) cube([peg_sep, peg_sep, peg_sep]);
             
-                translate([0,-peg_sep,0]) rotate([0,angle,0]) translate([length+extra-end_subtract,0,0]) track_curve(angle=end_angle);
+                translate([0,-peg_sep,0]) rotate([0,angle,0]) translate([length+extra-end_subtract,0,0]) track_curve(angle=90-end_angle);
             }
             //make the ends flat
-            #translate([50+run,0,0]) cube([100,100,100], center=true);
+            translate([50+run+extra,0,0]) cube([100,100,100], center=true);
             translate([-50,0,0]) cube([100,100,100], center=true);
         }
     }
     
 	 //this is used to hollow out things that the track is supposed to connect to, and to make sure that the ball path is clear.
     if(solid<=0){
-        translate([-.5,0,0]) translate([0,-peg_sep*.5,track_rad+wall]) rotate([0,angle,0]) rotate([0,90,0]) cylinder(r=track_rad, h=extra*2, center=true);
+        translate([-.5,0,0]) translate([0,-peg_sep*.5,track_rad+wall]) rotate([0,angle,0]) rotate([0,90,0]) cylinder(r=track_rad, h=extra_len*2, center=true);
     }
 }
