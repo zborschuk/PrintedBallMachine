@@ -29,7 +29,7 @@ translate([0,peg_thick,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) 
 
 //simple slope!
 rotate([-90,0,0])
-//mirror([1,0,0])
+mirror([1,0,0])
 slope_module();
 translate([in*5,0,-in*1]) 
 slope_module();
@@ -55,11 +55,11 @@ module slope_module(size = [4, -.5]){
         union(){
             inlet(height=3);
             
-            translate([in*7/8,0,in*2]) track(rise=(size[1]*1.1)*in, run=(size[0]*1.1)*in, solid=1, end_angle=0);
+            translate([in,0,in*2]) track(rise=(size[1]*1.1)*in, run=(size[0]*1.1)*in, solid=1, end_angle=0);
             hanger(solid=1, hole=[5,3], drop = in/2);
         }
         //hole in the inlet
-        translate([in*7/8,0,in*2]) track(rise=size[1], run=size[0], solid=-1, hanger=0, extra_len=in*.7);
+        translate([in,0,in*2]) track(rise=size[1], run=size[0], solid=-1, hanger=0, extra_len=in-wall*1.5);
 
 		  //cut the end flat
 		  translate([50+in*size[0]+in,0,in*2]) cube([100,100,100], center=true);
@@ -78,8 +78,8 @@ module inlet(height = 1){
     difference(){
         union() {
             hull(){
-                cube([inlet_x-inset,inlet_y,.1]);
-                translate([0,0,inlet_z-.1-4.5]) rotate([0,-10,0]) cube([inlet_x,inlet_y,.1]);
+                cube([inlet_x,inlet_y,.1]);
+                translate([0,0,inlet_z-.1-4.5]) rotate([0,-10,0]) cube([inlet_x+inset,inlet_y,.1]);
                 //%translate([0,0,inlet_z-.1]) cube([inlet_x,inlet_y,.1]);
             }
             translate([0,inlet_y,-in+inlet_z]) difference(){
@@ -97,14 +97,20 @@ module inlet(height = 1){
                     translate([-in,inlet_y-in/2,in/2+5]) translate([0,0,0]) sphere(r=ball_rad);
                 }
                 hull(){
-                    translate([wall,wall,0]) cube([inlet_x-wall*2-inset,inlet_y-wall*2,.1]);
-                    translate([wall,wall,inlet_z]) cube([inlet_x-wall*2,inlet_y-wall*2,.1]);
+                    translate([wall,wall,0]) cube([inlet_x-wall*2,inlet_y-wall*2,.1]);
+                    translate([wall,wall,inlet_z]) cube([inlet_x-wall*2+inset,inlet_y-wall*2,.1]);
                 }
                 //translate([wall,wall,wall]) cube([inlet_x-wall*2-inset,inlet_y-wall*2,inlet_z]);
             }
-            translate([wall,wall,wall*2.5]) cube([inlet_x-wall*2-inset,inlet_y-wall*2,.1]);
-            translate([wall,wall,inlet_z]) cube([inlet_x-wall*2,inlet_y-wall*2,.1]);
+            translate([wall,wall,wall*2.5]) cube([inlet_x-wall*2,inlet_y-wall*2,.1]);
+            translate([wall,wall,inlet_z]) cube([inlet_x-wall*2+inset,inlet_y-wall*2,.1]);
         }
+
+		  //ball exit
+		  hull(){
+                    translate([in,inlet_y-in/2,in/2]) translate([0,0,0]) sphere(r=in/2-wall);
+                    translate([in/2,inlet_y-in/2,in/2+5]) translate([0,0,0]) sphere(r=ball_rad);
+                }
         
         //scalloped entry
         for(i=[0:in:inlet_y-1]){
@@ -113,10 +119,6 @@ module inlet(height = 1){
         }
     }
 }
-
-
-*translate([peg_sep/2,peg_thick/2,peg_sep*1.5])
-square_peg();
 
 //debating remaking the peg square...
 //this is unfinished.  The round peg works.
@@ -181,7 +183,7 @@ module peg(){
             //connect 'em
             hull(){
                 rotate([90,0,0]) cylinder(r=peg_rad, h=wall);
-                #translate([0,0,-peg_sep*1.5]) rotate([90,0,0]) cylinder(r=peg_rad, h=wall);
+                translate([0,0,-peg_sep*1.5]) rotate([90,0,0]) cylinder(r=peg_rad, h=wall);
             }
             
             //lower peg
@@ -257,10 +259,6 @@ module track_curve(angle=45){
     }
 }
 
-translate([0,0,in*3]) track(end_angle = 90);
-
-track_curve();
-
 //section of track.
 //Length is in mm.
 //Start is at 0 (move it where you want it) end is length units away horizontally, at the specified angle.
@@ -283,7 +281,6 @@ module track(rise=-in, run=in*5, solid=1, track_angle=120, start=0, end_angle=0,
     
     //
     end_subtract = sin(end_angle)*(track_rad+wall)*2;
-    echo(end_subtract);
     
     translate([0,0,track_rad+wall])
     if(solid>=0){
