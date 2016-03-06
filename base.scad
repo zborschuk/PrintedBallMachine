@@ -1,38 +1,21 @@
-in = 25.4;
-
-slop = .2;
-
-//pegboard variables
-peg_rad = 1/4*in/2;
-peg_sep = 1*in;
-peg_thick = 1/4*in;
-
-wall=3;
-
-//ball variables
-ball_rad = 5/8*in/2;
-
-//track_rad = ball_rad+1+.5;  //this is the minimum size, I think
-track_rad = in/2-wall; //this makes the track an inch wide
-
-//inlet variables
-inlet_x = in;
-inlet_y = in*2;
-inlet_z = in*1;
-
-//outlet variables 
+include<configuration.scad>
 
 %pegboard();
 
 //peg for printing
-translate([0,peg_thick,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90]) peg();
+*translate([0,peg_thick,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90]) peg();
 
 //simple slope!
-rotate([-90,0,0])
+//rotate([-90,0,0])
+translate([in*10,0,-in*4]) 
 mirror([1,0,0])
 slope_module();
 translate([in*5,0,-in*1]) 
 slope_module();
+
+translate([in*10,0,-in*2]) 
+!rotate([-90,0,0])
+reverse_module();
 
 inlet();
 
@@ -60,6 +43,33 @@ module slope_module(size = [4, -.5]){
         }
         //hole in the inlet
         translate([in,0,in*2]) track(rise=size[1], run=size[0], solid=-1, hanger=0, extra_len=in-wall*1.5);
+
+		  //cut the end flat
+		  translate([50+in*size[0]+in-1,0,in*2]) cube([100,100,100], center=true);
+        
+        hanger(solid=-1, hole=[5,3], drop = in/2);
+    }
+}
+
+module reverse_module(size = [4, -.5]){
+    difference(){
+        union(){
+            inlet(height=3);
+            
+            translate([in,0,in*2]) track(rise=(size[1]*1)*in, run=(size[0]*1)*in, solid=1, end_angle=90);
+            difference(){
+                translate([-.25*in,-in*2,in*.5]) mirror([0,1,0]) track(rise=(size[1]*-1+.5)*in, run=(size[0]+1.25)*in, solid=1, end_angle=90);
+                //gotta cut the end flat
+                translate([-49,0,in*2]) cube([100,200,100], center=true);
+            }
+            
+            //support
+            translate([peg_sep/2,-peg_sep,peg_sep*1.5]) cube([peg_sep-2,wall/2,peg_sep], center=true);
+            
+            hanger(solid=1, hole=[5,3], drop = in/2);
+        }
+        //hole in the inlet
+        //translate([in,0,in*2]) track(rise=size[1], run=size[0], solid=-1, hanger=0, extra_len=in-wall*1.5);
 
 		  //cut the end flat
 		  translate([50+in*size[0]+in,0,in*2]) cube([100,100,100], center=true);
@@ -144,10 +154,10 @@ module square_peg(){
         }
         //front curve
         intersection(){
-            #translate([0,-peg_thick/2-peg_sq,peg_sq/2]) rotate([0,90,0]) rotate_extrude(angle=90, $fn=30){
+            translate([0,-peg_thick/2-peg_sq,peg_sq/2]) rotate([0,90,0]) rotate_extrude(angle=90, $fn=30){
                 translate([peg_sq/2,0,0]) square([peg_sq, peg_sq], center=true);
             }
-            #translate([-peg_sq/2,-peg_thick/2-peg_sq,peg_sq/2]) rotate([-90-angle,0,0]) cube([peg_sq, peg_thick, peg_sq]);
+            translate([-peg_sq/2,-peg_thick/2-peg_sq,peg_sq/2]) rotate([-90-angle,0,0]) cube([peg_sq, peg_thick, peg_sq]);
         }
     }
 }
@@ -155,9 +165,11 @@ module square_peg(){
 module peg(){
     $fn=16;
     
+    extra_inset = 1;
+    
     peg_angle = 20;
-    rear_inset = peg_rad*tan(peg_angle);
-    front_inset = rear_inset+slop;
+    rear_inset = peg_rad*tan(peg_angle)+extra_inset;
+    front_inset = rear_inset+slop-extra_inset;
     
     cutoff=1;
     
@@ -225,7 +237,7 @@ module track_trough(angle=0, length=1, ta=240){
     difference(){
             union(){
                 rotate([0,angle,0]) difference(){
-                    %translate([length,0,0]) translate([0,0,ball_rad-track_rad]) sphere(r=ball_rad);
+                    //%translate([length,0,0]) translate([0,0,ball_rad-track_rad]) sphere(r=ball_rad);
                     
                     rotate([0,90,0]) rotate([0,0,22.5]) cylinder(r=(track_rad+wall)/cos(180/8), h=length, $fn=8);
                     translate([-.5,0,0]) {
@@ -248,6 +260,21 @@ module track_slice(){
     projection() translate([0,0,1]) rotate([0,90,0]) track_trough(length=2);
 }
 
+module track_slice_2(){
+    translate([0,0,-.01]) rotate([0,90,0]) track_trough(length=.02);
+}
+
+track_hollow_slice_2();
+//track_slice_2();
+module track_hollow_slice_2(){
+    difference(){
+        intersection(){
+            translate([wall,0,0]) cube([peg_sep,peg_sep-wall/2,.2], center=true);
+            sphere(r=track_rad+wall);
+        }
+        translate([0,0,1]) rotate([0,90,0]) track_trough(length=2);
+    }
+}
 
 module track_curve(angle=45){
     intersection(){
@@ -258,6 +285,51 @@ module track_curve(angle=45){
         }
     }
 }
+
+translate([-30,0,0]) track_curve();
+
+translate([-30,0,0]) track_curve_2();
+module track_curve_2(angle=90, drop=-10, track_angle = -80){
+    num_steps = 5;
+    //translate([0,0,-peg_sep/2-.5]) cube([peg_sep+1, peg_sep+1, peg_sep+1]);
+    //translate([0,0,-peg_sep/2-.5]) rotate([0,0,angle]) cube([peg_sep, peg_sep, peg_sep]);
+    
+    
+    extra_drop = drop/(num_steps+1)*tan(90-track_angle);
+    mirror([1,1,0])
+    rotate([90,0,0]) 
+    difference(){
+        union(){
+            //the inlet is extra-long, to meet the slope this attaches to.
+            hull(){
+                rotate([0,0,90]) translate([0*drop/(num_steps+1),in/2+.1,extra_drop]) track_slice_2();
+                rotate([0,0,90]) translate([1*drop/(num_steps+1),in/2+.1,0]) track_slice_2();
+            }
+                
+            //the curved angle
+            for(i=[0:num_steps-1]){
+                hull(){
+                    rotate([0,i*angle/num_steps,0]) rotate([0,0,90]) translate([(i+1)*drop/(num_steps+1),in/2+.1,0]) track_slice_2();
+                    rotate([0,(i+1)*angle/num_steps,0]) rotate([0,0,90]) translate([(i+2)*drop/(num_steps+1),in/2+.1,0]) track_slice_2();
+                }
+            }
+        }
+        //inlet
+        hull(){
+            rotate([0,0,90]) translate([0*drop/(num_steps+1),in/2+.1,extra_drop]) track_hollow_slice_2();
+            rotate([0,0,90]) translate([1*drop/(num_steps+1),in/2+.1,0]) track_hollow_slice_2();
+        }
+        
+        //curved part
+        for(i=[0:num_steps-1]){
+            hull(){
+                rotate([0,i*angle/num_steps,0]) rotate([0,0,90]) translate([(i+1)*drop/(num_steps+1),in/2+.1,0]) track_hollow_slice_2();
+                rotate([0,(i+1)*angle/num_steps,0]) rotate([0,0,90]) translate([(i+2)*drop/(num_steps+1),in/2+.1,0]) track_hollow_slice_2();
+            }
+        }
+    }
+}
+
 
 //section of track.
 //Length is in mm.
@@ -275,8 +347,8 @@ module track(rise=-in, run=in*5, solid=1, track_angle=120, start=0, end_angle=0,
     ta = 360-track_angle;
     
     //track_rad+wall
-    //TODO:: These angles are all wrong.
-    extra = cos(90-angle)*(track_rad+wall); //how much longer to make track due to its thickness
+    //extra = abs(cos(90-angle)*(track_rad+wall)); //how much longer to make track due to its thickness
+    extra = 0;
     length = sqrt(rise*rise+run*run);
     
     //
@@ -291,7 +363,16 @@ module track(rise=-in, run=in*5, solid=1, track_angle=120, start=0, end_angle=0,
             
                 //#rotate([0,angle,0]) translate([length+extra,0,0]) translate([-peg_sep,-peg_sep, -peg_sep/2]) cube([peg_sep, peg_sep, peg_sep]);
             
-                translate([0,-peg_sep,0]) rotate([0,angle,0]) translate([length+extra-end_subtract,0,0]) track_curve(angle=90-end_angle);
+                echo("track end echoes");
+                echo(rise-in*rise/run);
+                echo(length);
+                echo(extra);
+                echo(end_subtract);
+                //curve the end, as needed
+                translate([0,-peg_sep,0]) 
+                rotate([0,angle,0]) translate([length+extra-end_subtract,0,0])
+                //translate([0,0,rise-in*rise/run]) 
+                rotate([0,-angle,0]) translate([0,0,-4*rise/run]) track_curve_2(angle=end_angle, drop=in*rise/run*1.125, track_angle=angle);
             }
             //make the ends flat
             translate([50+run+extra,0,0]) cube([100,100,100], center=true);
