@@ -18,6 +18,7 @@ shaft=6;
 
 //have to print all three parts, and mount them as shown.
 //rotate([-90,0,0])
+mirror([1,0,0]) translate([-in*9,0,0]) 
 bearing_inlet();
 //rotate([-90,0,0])
 bearing_outlet();
@@ -86,11 +87,11 @@ module bearing_outlet(){
                 }
             }
         
-            hanger(solid=1, hole=[6,7], drop=in*.75);
-            hanger(solid=1, hole=[9,7], drop=in*1.33);
+            hanger(solid=1, hole=[6,7], drop=in);
+            hanger(solid=1, hole=[9,7], drop=in*1.5);
         }
-        hanger(solid=-1, hole=[6,7], drop=in*.75);
-        hanger(solid=-1, hole=[9,7], drop=in*1.33);
+        hanger(solid=-1, hole=[6,7], drop=in);
+        hanger(solid=-1, hole=[9,7], drop=in*1.5);
     }
 }
 
