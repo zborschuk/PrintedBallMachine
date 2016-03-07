@@ -78,7 +78,7 @@ module reverse_module(size = [4, -.5]){
     }
 }
 
-module inlet(height = 1){
+module inlet(height = 1, hanger_height=1){
     inset = inlet_x-ball_rad*2-wall*2;
     //slope = .25*in;
     
@@ -93,8 +93,8 @@ module inlet(height = 1){
                 //%translate([0,0,inlet_z-.1]) cube([inlet_x,inlet_y,.1]);
             }
             translate([0,inlet_y,-in+inlet_z]) difference(){
-                hanger(solid=1, hole=[1,2], drop = in/2);
-                hanger(solid=-1, hole=[1,2], drop = in/2);
+                hanger(solid=1, hole=[1,height+hanger_height], drop = (hanger_height)*in);
+                hanger(solid=-1, hole=[1,height+hanger_height], drop =(hanger_height)*in);
             }
         }
         
