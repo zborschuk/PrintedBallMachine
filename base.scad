@@ -1,6 +1,6 @@
 include<configuration.scad>
 
-%pegboard();
+%translate([0,0,-in*4]) pegboard([12,12]);
 
 //peg for printing
 *translate([0,peg_thick,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90]) peg();
@@ -13,8 +13,16 @@ slope_module();
 translate([in*5,0,-in*1]) 
 slope_module();
 
+translate([in*5,0,-in*5]) 
+mirror([1,0,0])
+slope_module();
+
+//this module angles to the other side, acts as a brake to slow down long runs.
+//rotate([-90,0,0])
+offset_slope_module();
+
 translate([in*10,0,-in*2]) 
-!rotate([-90,0,0])
+//rotate([-90,0,0])
 reverse_module();
 
 inlet();
@@ -42,19 +50,55 @@ module slope_module(size = [4, -.5]){
             hanger(solid=1, hole=[5,3], drop = in/2);
         }
         //hole in the inlet
-        translate([in,0,in*2]) track(rise=size[1], run=size[0], solid=-1, hanger=0, extra_len=in-wall*1.5);
+        *translate([in,0,in*2]) track(rise=size[1], run=size[0], solid=-1, hanger=0, extra_len=in-wall*1.5);
 
 		  //cut the end flat
 		  translate([50+in*size[0]+in-1,0,in*2]) cube([100,100,100], center=true);
         
-        hanger(solid=-1, hole=[5,3], drop = in/2);
+         hanger(solid=-1, hole=[5,3], drop = in/2);
     }
 }
 
-module reverse_module(size = [4, -.5]){
+//A sample module which uses the inlet to roll balls down a chute.
+module offset_slope_module(size = [4, -.5]){
+    inset = wall;
     difference(){
         union(){
             inlet(height=3);
+            
+            translate([in-inset,0,in*2])  difference(){
+                track(rise=(size[1]*1.1)*in, run=(size[0]*1.1)*in, z_out=track_rad*2+wall*3, solid=1, end_angle=0);
+                //flatten the front
+                translate([-25+inset,-25,0]) cube([50,50,50], center=true);
+            }
+            hanger(solid=1, hole=[5,3], drop = in*.75);
+            
+            //lower end support
+            hull(){
+                translate([in*4.5,0,in*2.5-in*.75]) rotate([90,0,0]) rotate([0,0,22.5]) cylinder(r=wall*2, h=in*1.5, $fn=8);
+                translate([in*4.5,0,in*2.5-in*.55]) rotate([90,0,0]) rotate([0,0,22.5]) cylinder(r=wall*2, h=in*1.5, $fn=8);
+            }
+            
+        }
+        
+        translate([in-inset,0,in*2]) difference(){
+            track(rise=(size[1]*1.1)*in, run=(size[0]*1.1)*in, z_out=track_rad*2+wall*3, solid=-1, end_angle=0);
+            //flatten the front
+            translate([0,-25,track_rad+wall]) cube([50,50,50], center=true);
+        }
+
+		 //cut the end flat
+		 translate([50+in*size[0]+in-1,0,in*2]) cube([100,200,200], center=true);
+        
+         hanger(solid=-1, hole=[5,3], drop = in*.75);
+    }
+}
+
+//a module to turn the marbles around.
+module reverse_module(size = [4, -.5]){
+    difference(){
+        union(){
+            inlet(height=3, hanger_height=1);
             
             translate([in,0,in*2]) track(rise=(size[1]*1)*in, run=(size[0]*1)*in, solid=1, end_angle=90);
             difference(){
@@ -93,8 +137,8 @@ module inlet(height = 1, hanger_height=1){
                 //%translate([0,0,inlet_z-.1]) cube([inlet_x,inlet_y,.1]);
             }
             translate([0,inlet_y,-in+inlet_z]) difference(){
-                hanger(solid=1, hole=[1,height+hanger_height], drop = (hanger_height)*in);
-                hanger(solid=-1, hole=[1,height+hanger_height], drop =(hanger_height)*in);
+                hanger(solid=1, hole=[1,1+hanger_height], drop = (hanger_height)*in);
+                hanger(solid=-1, hole=[1,1+hanger_height], drop =(hanger_height)*in);
             }
         }
         
@@ -124,7 +168,7 @@ module inlet(height = 1, hanger_height=1){
         
         //scalloped entry
         for(i=[0:in:inlet_y-1]){
-            translate([-in/2,inlet_y-i,inlet_z-in/2]) track(rise=-1.5, run=10, solid=-1, track_rad=track_rad+.25);
+            translate([-in/2,inlet_y-i,inlet_z-in/2]) track(rise=-1.5, run=17, solid=-1, track_rad=track_rad+.25);
             
         }
     }
@@ -233,9 +277,10 @@ module hanger(solid=0, hole=[1,4], slot_size = 0, drop = in/2){
 }
 
 //track trough
-module track_trough(angle=0, length=1, ta=240){
+module track_trough(angle=0, length=1, ta=240, z_angle = 0){
     difference(){
             union(){
+                rotate([0,0,z_angle])
                 rotate([0,angle,0]) difference(){
                     //%translate([length,0,0]) translate([0,0,ball_rad-track_rad]) sphere(r=ball_rad);
                     
@@ -251,8 +296,15 @@ module track_trough(angle=0, length=1, ta=240){
             }
         
             //ball path
-            translate([-.5,0,0]) rotate([0,angle,0]) rotate([0,90,0]) cylinder(r=track_rad, h=length+2);
+            translate([-.5,0,0]) rotate([0,0,z_angle]) rotate([0,angle,0]) rotate([0,90,0]) cylinder(r=track_rad, h=length+2);
         }
+}
+
+module track_hollow(angle=0, length=1, ta=240, z_angle = 0){
+    difference(){
+        rotate([0,0,z_angle]) rotate([0,angle,0]) rotate([0,90,0]) rotate([0,0,22.5]) cylinder(r=(track_rad+wall)/cos(180/8)-.1, h=length, $fn=8);
+        track_trough(angle=angle, length=length, ta=ta, z_angle = z_angle);
+    }
 }
 
 //a 2d cross section of the track.  Used to make curves.
@@ -264,8 +316,6 @@ module track_slice_2(){
     translate([0,0,-.01]) rotate([0,90,0]) track_trough(length=.02);
 }
 
-track_hollow_slice_2();
-//track_slice_2();
 module track_hollow_slice_2(){
     difference(){
         intersection(){
@@ -286,9 +336,7 @@ module track_curve(angle=45){
     }
 }
 
-translate([-30,0,0]) track_curve();
 
-translate([-30,0,0]) track_curve_2();
 module track_curve_2(angle=90, drop=-10, track_angle = -80){
     num_steps = 5;
     //translate([0,0,-peg_sep/2-.5]) cube([peg_sep+1, peg_sep+1, peg_sep+1]);
@@ -340,9 +388,10 @@ module track_curve_2(angle=90, drop=-10, track_angle = -80){
 //solid = -1: draw the marble path - useful for making holes in things.
 //
 //start/end dictate the angle at the end of the track.  This is a 1" radius, period - defaults to 0, which is straight; angles over 90 or under -90 result in +/-90.
-module track(rise=-in, run=in*5, solid=1, track_angle=120, start=0, end_angle=0, extra_len = in){
+module track(rise=-in, run=in*5, z_out=0, solid=1, track_angle=120, start=0, end_angle=0, extra_len = in){
 
 	 angle = -atan(rise/run);
+     z_angle = -atan(z_out/run);
 
     ta = 360-track_angle;
     
@@ -359,7 +408,7 @@ module track(rise=-in, run=in*5, solid=1, track_angle=120, start=0, end_angle=0,
         difference(){
             union(){
                 %translate([0,-peg_sep/2,0]) translate([0,0,ball_rad-track_rad]) sphere(r=ball_rad);
-                translate([0,-peg_sep*.5,0]) track_trough(angle, length+extra-end_subtract, ta);
+                translate([0,-peg_sep*.5,0]) track_trough(angle, length+extra-end_subtract, ta, z_angle=z_angle);
             
                 //#rotate([0,angle,0]) translate([length+extra,0,0]) translate([-peg_sep,-peg_sep, -peg_sep/2]) cube([peg_sep, peg_sep, peg_sep]);
             
@@ -375,13 +424,16 @@ module track(rise=-in, run=in*5, solid=1, track_angle=120, start=0, end_angle=0,
                 rotate([0,-angle,0]) translate([0,0,-4*rise/run]) track_curve_2(angle=end_angle, drop=in*rise/run*1.125, track_angle=angle);
             }
             //make the ends flat
-            translate([50+run+extra,0,0]) cube([100,100,100], center=true);
-            translate([-50,0,0]) cube([100,100,100], center=true);
+            translate([50+run+extra,0,0]) cube([100,200,200], center=true);
+            translate([-50,0,0]) cube([100,200,200], center=true);
         }
     }
     
 	 //this is used to hollow out things that the track is supposed to connect to, and to make sure that the ball path is clear.
+    translate([0,0,track_rad+wall])
     if(solid<=0){
-        translate([-.5,0,0]) translate([0,-peg_sep*.5,track_rad+wall]) rotate([0,angle,0]) rotate([0,90,0]) cylinder(r=track_rad, h=extra_len*2, center=true);
+        *translate([-.5,0,0]) translate([0,-peg_sep*.5,track_rad+wall]) rotate([0,angle,0]) *rotate([0,90,0]) cylinder(r=track_rad, h=extra_len*2, center=true);
+        
+        translate([0,-peg_sep*.5,0]) track_hollow(angle, length+extra-end_subtract, ta, z_angle=z_angle);
     }
 }

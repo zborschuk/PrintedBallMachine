@@ -8,7 +8,7 @@ gear_rad = in*3.9;
 hole_rad = 5;
 
 lift_rad = in*3;
-num_balls = 19;
+num_balls = 23;
 
 dflat=.4;
 shaft=6;
