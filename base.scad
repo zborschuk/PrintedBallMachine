@@ -3,7 +3,7 @@ include<configuration.scad>
 %translate([0,0,-in*4]) pegboard([12,12]);
 
 //peg for printing
-*translate([0,peg_thick,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90]) peg();
+!translate([0,peg_thick,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90]) peg();
 
 //simple slope!
 //rotate([-90,0,0])
@@ -209,7 +209,7 @@ module square_peg(){
 module peg(){
     $fn=16;
     
-    extra_inset = 1;
+    extra_inset = 2;
     
     peg_angle = 20;
     rear_inset = peg_rad*tan(peg_angle)+extra_inset;
@@ -221,7 +221,7 @@ module peg(){
     difference(){
         union(){
           //upper peg
-            translate([0,peg_thick+peg_rad-rear_inset,0]) rotate([90,0,0]) cylinder(r1=peg_rad*3/4-slop/2, r2=peg_rad-slop, h=peg_thick+peg_rad-rear_inset);
+            #translate([0,peg_thick+peg_rad-rear_inset,0]) rotate([90,0,0]) cylinder(r1=peg_rad*3/4-slop/2, r2=peg_rad-slop, h=peg_thick+peg_rad-rear_inset);
 				
 			translate([0,-wall+.1,0]) rotate([90,0,0]) cylinder(r1=peg_rad, r2=peg_rad*3/4, h=wall+peg_rad-front_inset);
 
@@ -253,17 +253,16 @@ module peg(){
     }
 }
 
-module hanger(solid=0, hole=[1,4], slot_size = 0, drop = in/2){
+module hanger(solid=0, hole=[1,4], slot_size = 0, drop = in/2, rot = 0){
     offset = (track_rad+wall);
     
     translate([in*hole[0]-peg_sep/2, 0, in*(hole[1]-1)]) 
     if(solid >= 0) union(){
-        //right (slot) side
         hull(){
             translate([-slot_size/2,0,peg_sep/2]) rotate([90,0,0]) cylinder(r=peg_rad+wall*2, h=wall);
             translate([slot_size/2,0,peg_sep/2]) rotate([90,0,0]) cylinder(r=peg_rad+wall*2, h=wall);
                 
-            translate([0,0,peg_sep/2-drop])rotate([90,0,0]) rotate([0,0,22.5]) cylinder(r=peg_rad+wall, h=wall, $fn=8);
+            rotate([0,rot,0]) translate([0,0,peg_sep/2-drop])rotate([90,0,0]) rotate([0,0,22.5]) cylinder(r=peg_rad+wall, h=wall, $fn=8);
         }
     }
     

@@ -10,8 +10,8 @@ hole_rad = 5;
 lift_rad = in*3;
 num_balls = 23;
 
-dflat=.4;
-shaft=6;
+dflat=.2;
+shaft=5+slop;
 
 //%pegboard([10,10]);
 //%gear_mockup();
@@ -53,17 +53,26 @@ module bearing_inlet(){
             
             //bearing mount
             translate([in*4.5,0,in*3]) rotate([90,0,0]){
-                cylinder(r1=hole_rad*2, r2=hole_rad*2-slop*4, h = in+1, $fn=6);
-                translate([0,0,in-1]) cylinder(r1=hole_rad, r2=hole_rad-slop*2, h = in+1, $fn=6);
+                translate([0,-10,0]) scale([2.7,2,1]) cylinder(r1=hole_rad*2, r2=hole_rad*2-slop*4, h = in+1, $fn=6);
+                translate([0,0,in-1]) cylinder(r1=hole_rad-slop*2, r2=hole_rad-slop*4, h = in*3/4-1, $fn=6);
             }
             
             //motor mount
             
         
-            hanger(solid=1, hole=[5,4], drop=in*3.5);
+            hanger(solid=1, hole=[5,4], drop=in*3.4, rot=5);
+            hanger(solid=1, hole=[4,4], drop=in*3.5, rot =-15);
+            hanger(solid=1, hole=[6,4], drop=in*3.7, rot = 25);
             
         }
+        
+        translate([in*4.5,0,in*3]) rotate([90,0,0]){
+                translate([0,0,in*1.5+.1]) cylinder(r=1.5, r2=1.7, h = in*1.25, $fn=30, center=true);
+            }
+        
         hanger(solid=-1, hole=[5,4], drop=in*6.5);
+        hanger(solid=-1, hole=[4,4], drop=in*3.5, rot =-20);
+        hanger(solid=-1, hole=[6,4], drop=in*3.5, rot = 20);
     }
 }
 
@@ -151,7 +160,7 @@ module bearing(){
         }
         
         //motor drive gear - just a planet with a motor attachment.
-        *translate([100+2,0,0]) difference(){
+        !translate([100+2,0,0]) difference(){
             union(){
                 //%cylinder(r=18, h=40);
                 herringbone(11,pitch,P,DR,tol,helix_angle,T);
@@ -185,6 +194,7 @@ module d_slot(shaft=6, height=10, tolerance = .2, dflat=.25, $fn=30){
        difference(){ 
            cylinder(r1=shaft/2+tolerance, r2=shaft/2+tolerance/2, h=height+.01);
            translate([-shaft/2,shaft/2-dflat,0]) cube([shaft, shaft, height+.01]);
+           translate([-shaft/2,-shaft/2-shaft+dflat,0]) cube([shaft, shaft, height+.01]);
        }
     }
 }
