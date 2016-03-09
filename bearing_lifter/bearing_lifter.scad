@@ -1,5 +1,5 @@
-include <configuration.scad>;
-use <base.scad>;
+include <../configuration.scad>;
+use <../base.scad>;
 use <bearing.scad>;
 
 peg_sep = 25.4;
@@ -20,7 +20,7 @@ shaft=5+slop;
 //rotate([-90,0,0])
 mirror([1,0,0]) translate([-in*9,0,0]) 
 bearing_inlet();
-!rotate([-90,0,0])
+//!rotate([-90,0,0])
 bearing_outlet();
 translate([in*4.5,-in*1-1-ball_rad*2-wall,in*4]) rotate([90,0,0]) mirror([0,0,1])
 bearing();
@@ -56,10 +56,7 @@ module bearing_inlet(){
                 translate([0,-10,0]) scale([2.7,2,1]) cylinder(r1=hole_rad*2, r2=hole_rad*2-slop*4, h = in+1, $fn=6);
                 translate([0,0,in-1]) cylinder(r1=hole_rad-slop*2, r2=hole_rad-slop*4, h = in*3/4-1, $fn=6);
             }
-            
-            //motor mount
-            
-        
+                  
             hanger(solid=1, hole=[5,4], drop=in*3.4, rot=5);
             hanger(solid=1, hole=[4,4], drop=in*3.5, rot =-15);
             hanger(solid=1, hole=[6,4], drop=in*3.7, rot = 25);
@@ -76,8 +73,15 @@ module bearing_inlet(){
     }
 }
 
+
+
 //outlet ramp
 module bearing_outlet(){
+	$fn=30;
+
+	motor_rad = 33/2;
+	motor_mount_rad = 38/2;
+	m3_rad = 1.7;
     
     support_step=8;
     
@@ -97,8 +101,40 @@ module bearing_outlet(){
             }
 
 				//motor mounting lugs
-				#cylinder(r=wall*3, h=in-wall);
-        
+				translate([in*7, 0, in*6.5]) rotate([90,0,0]){
+					difference(){
+						union(){
+							translate([-motor_mount_rad,0,0]) cylinder(r1=in/2, r2=m3_rad+wall, h=in-wall);
+
+							//the right mount is curvy
+							for(i=[-15:5:15]) translate([-motor_mount_rad,0,0]) rotate([0,0,i]) translate([motor_mount_rad*2,0,0]) hull(){
+								cylinder(r1=in/2, r2=m3_rad+wall, h=in-wall);
+							}
+						}
+						translate([-motor_mount_rad,0,in/2]) cylinder(r=m3_rad, h=in+wall);
+						translate([-motor_mount_rad,0,-.2]) cylinder(r=m3_rad, h=in/2);
+						translate([-motor_mount_rad,0,in/2-3.2]) cylinder(r=7/2, h=3, $fn=6);
+						
+						//the right mount is curvy
+						for(i=[-15:1:15]) translate([-motor_mount_rad,0,-.1]) rotate([0,0,i]) translate([motor_mount_rad*2,0,0]) {
+							translate([0,0,in/2]) cylinder(r=m3_rad, h=in+wall);
+							translate([0,0,-.2]) cylinder(r=m3_rad, h=in/2);
+							translate([0,0,in/2-3.2]) cylinder(r=7/2, h=3, $fn=6);
+						}
+						
+						//motor clearance
+						*translate([-motor_mount_rad,0,0]) rotate_extrude(){
+							translate([motor_mount_rad,0,-.1]) square([motor_rad*2, in*2], center=true);
+						}
+
+						//motor clearance
+						for(i=[-30:15:90]) translate([-motor_mount_rad,0,-.1]) rotate([0,0,i]) translate([motor_mount_rad,0,0]) hull(){
+							cylinder(r=motor_rad, h=in*2);
+							//translate([50,0,0]) cylinder(r=motor_rad, h=in*2);
+						}
+					}
+        		}
+
             hanger(solid=1, hole=[6,7], drop=in);
             hanger(solid=1, hole=[9,7], drop=in*1.5);
         }
@@ -107,7 +143,7 @@ module bearing_outlet(){
     }
 }
 
-module bearing(){
+module bearing(bearing=true, drive_gear=false){
     //set variables
     // bearing diameter of ring
     D=in*5.25;
@@ -163,10 +199,10 @@ module bearing(){
         }
         
         //motor drive gear - just a planet with a motor attachment.
-        translate([100+2,0,0]) difference(){
+        !translate([100+2,0,0]) difference(){
             union(){
                 //%cylinder(r=18, h=40);
-                herringbone(11,pitch,P,DR,tol,helix_angle,T);
+                herringbone(17,pitch,P,DR,tol,helix_angle,T);
             }
             
             //d shaft
