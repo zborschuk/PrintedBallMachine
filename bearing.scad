@@ -135,7 +135,7 @@ module flat_extrude(h,twist,flat){
 	if(flat==false)
 		linear_extrude(height=h,twist=twist,slices=twist/6)children(0);
 	else
-		children(0);
+		child(0);
 }
 
 module gear2D (

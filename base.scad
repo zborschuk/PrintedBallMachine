@@ -387,7 +387,7 @@ module track_curve_2(angle=90, drop=-10, track_angle = -80){
 //solid = -1: draw the marble path - useful for making holes in things.
 //
 //start/end dictate the angle at the end of the track.  This is a 1" radius, period - defaults to 0, which is straight; angles over 90 or under -90 result in +/-90.
-module track(rise=-in, run=in*5, z_out=0, solid=1, track_angle=120, start=0, end_angle=0, extra_len = in){
+module track(rise=-in, run=in*5, z_out=0, solid=1, track_angle=120, start=0, end_angle=0, extra_len = in, end_scale=[1,1,1]){
 
 	 angle = -atan(rise/run);
      z_angle = -atan(z_out/run);
@@ -420,10 +420,10 @@ module track(rise=-in, run=in*5, z_out=0, solid=1, track_angle=120, start=0, end
                 translate([0,-peg_sep,0]) 
                 rotate([0,angle,0]) translate([length+extra-end_subtract,0,0])
                 //translate([0,0,rise-in*rise/run]) 
-                rotate([0,-angle,0]) translate([0,0,-4*rise/run]) track_curve_2(angle=end_angle, drop=in*rise/run*1.125, track_angle=angle);
+                rotate([0,-angle,0]) translate([0,0,-4*rise/run]) scale(end_scale) track_curve_2(angle=end_angle, drop=in*rise/run*1.125, track_angle=angle);
             }
             //make the ends flat
-            translate([50+run+extra,0,0]) cube([100,200,200], center=true);
+            translate([50+run+extra+(end_scale[0]-1)*end_subtract,0,0]) cube([100,200,200], center=true);
             translate([-50,0,0]) cube([100,200,200], center=true);
         }
     }

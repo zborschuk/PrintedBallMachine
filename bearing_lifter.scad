@@ -20,7 +20,7 @@ shaft=5+slop;
 //rotate([-90,0,0])
 mirror([1,0,0]) translate([-in*9,0,0]) 
 bearing_inlet();
-//rotate([-90,0,0])
+!rotate([-90,0,0])
 bearing_outlet();
 translate([in*4.5,-in*1-1-ball_rad*2-wall,in*4]) rotate([90,0,0]) mirror([0,0,1])
 bearing();
@@ -86,7 +86,7 @@ module bearing_outlet(){
         union(){
             //outlet ramp
             translate([in*8,0,in*4.5])
-            translate([peg_sep,0,0]) mirror([i,0,0]) track(rise=.75*in, run=5*in, solid=1, end_angle=90);
+            translate([peg_sep,0,0]) mirror([i,0,0]) track(rise=.75*in-2, run=5*in, solid=1, end_angle=90, end_scale=[1.33,1,1]);
             
             //prevents the balls from rolling out prematurely
             for(i=[1:8]){
@@ -95,6 +95,9 @@ module bearing_outlet(){
                     rotate([0,35-(i+1)*support_step,0]) translate([lift_rad-in*3/16,0,0]) rotate([90,0,0]) cylinder(r1=1+(i+1)/4, r2=2+(i+1)/2, h=in);
                 }
             }
+
+				//motor mounting lugs
+				#cylinder(r=wall*3, h=in-wall);
         
             hanger(solid=1, hole=[6,7], drop=in);
             hanger(solid=1, hole=[9,7], drop=in*1.5);
@@ -160,7 +163,7 @@ module bearing(){
         }
         
         //motor drive gear - just a planet with a motor attachment.
-        !translate([100+2,0,0]) difference(){
+        translate([100+2,0,0]) difference(){
             union(){
                 //%cylinder(r=18, h=40);
                 herringbone(11,pitch,P,DR,tol,helix_angle,T);
