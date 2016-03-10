@@ -1,9 +1,10 @@
 include<configuration.scad>
+include<pins.scad>
 
 %translate([0,0,-in*4]) pegboard([12,12]);
 
 //peg for printing
-!translate([0,peg_thick,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90]) peg();
+!translate([0,peg_thick,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90]) peg(pin=true);
 
 //simple slope!
 //rotate([-90,0,0])
@@ -122,9 +123,31 @@ module reverse_module(size = [4, -.5]){
     }
 }
 
-module inlet(height = 1, hanger_height=1){
+/* The inlet module.
+ * ABSOLUTELY REQUIRED: two (2) scalloped entryu points, 1" and 1" from the hook.  The height and radius are not to deviate.
+ *
+ * Variables:
+ * height: Given in units of pegboard; raises or lowers your inlet, for convenience.  Must be a whole number.
+ *
+ * width: MINIMUM 2, I think max 3 by convention... not set in stone.
+ * ***TODO: this parameter does not yet affect the width of the inlet.
+ *
+ * length: Given in units of pegboard; 1 or more.  Each extra unit adds its own hanger, if applicable.
+ *
+ * outlet: how the ball gets out; options are INLET_HOLE, INLET_SLOT, and INLET_NONE.  Hole is a single exit point; slot opens the entire side, and none does nothing.  All three still move the balls to the pegboard/outlet corner, however.
+ * 
+ * hanger_height: Given in units of pegboard, how tall your hanger should be.  Set to 0 for no hanger.
+ */
+module inlet(height = 1, width = 2, length = 1, hanger_height=1, lift=5, outlet=INLET_HOLE){
     inset = inlet_x-ball_rad*2-wall*2;
     //slope = .25*in;
+    
+    side_supports = length-1;
+    
+    inlet_x = inlet_x*length;
+    
+    lift_angle = atan(lift/inlet_x);
+    drop_top = 4.6;
     
     %translate([in,-in/2,(height-.5)*in]) translate([0,0,0]) sphere(r=ball_rad);
     
@@ -133,12 +156,14 @@ module inlet(height = 1, hanger_height=1){
         union() {
             hull(){
                 cube([inlet_x,inlet_y,.1]);
-                translate([0,0,inlet_z-.1-4.5]) rotate([0,-10,0]) cube([inlet_x+inset,inlet_y,.1]);
+                translate([0,0,inlet_z-drop_top]) rotate([0,-lift_angle,0]) cube([inlet_x+inset,inlet_y,.1]);
                 //%translate([0,0,inlet_z-.1]) cube([inlet_x,inlet_y,.1]);
             }
-            translate([0,inlet_y,-in+inlet_z]) difference(){
-                hanger(solid=1, hole=[1,1+hanger_height], drop = (hanger_height)*in);
-                hanger(solid=-1, hole=[1,1+hanger_height], drop =(hanger_height)*in);
+            for(i=[0:length-1]){
+                translate([i*inlet_x/length,inlet_y,-in+inlet_z]) difference(){
+                    hanger(solid=1, hole=[1,1+hanger_height], drop = (hanger_height)*in);
+                    hanger(solid=-1, hole=[1,1+hanger_height], drop =(hanger_height)*in);
+                }
             }
         }
         
@@ -147,24 +172,36 @@ module inlet(height = 1, hanger_height=1){
             intersection(){
                 //ball divot
                 hull(){
-                    translate([in,inlet_y-in/2,in/2]) translate([0,0,0]) sphere(r=in/2-wall);
-                    translate([-in,inlet_y-in/2,in/2+5]) translate([0,0,0]) sphere(r=ball_rad);
+                    translate([inlet_x,inlet_y-in/2,in/2]) translate([0,0,0]) sphere(r=in/2-wall);
+                    translate([-inlet_x,inlet_y-in/2,in/2+5*length]) translate([0,0,0]) sphere(r=ball_rad);
                 }
                 hull(){
                     translate([wall,wall,0]) cube([inlet_x-wall*2,inlet_y-wall*2,.1]);
-                    translate([wall,wall,inlet_z]) cube([inlet_x-wall*2+inset,inlet_y-wall*2,.1]);
+                    translate([wall,wall,inlet_z+lift]) cube([inlet_x-wall*2+inset,inlet_y-wall*2,.1]);
                 }
                 //translate([wall,wall,wall]) cube([inlet_x-wall*2-inset,inlet_y-wall*2,inlet_z]);
             }
             translate([wall,wall,wall*2.5]) cube([inlet_x-wall*2,inlet_y-wall*2,.1]);
-            translate([wall,wall,inlet_z]) cube([inlet_x-wall*2+inset,inlet_y-wall*2,.1]);
+            *translate([wall,wall,inlet_z]) cube([inlet_x-wall*2+inset,inlet_y-wall*2,.1]);
+            translate([0,wall,inlet_z-drop_top+.1]) rotate([0,-lift_angle,0])  translate([wall,0,0]) cube([inlet_x+inset-wall*2,inlet_y-wall*2,.1]);
         }
 
 		  //ball exit
-		  hull(){
-                    translate([in,inlet_y-in/2,in/2]) translate([0,0,0]) sphere(r=in/2-wall);
-                    translate([in/2,inlet_y-in/2,in/2+5]) translate([0,0,0]) sphere(r=ball_rad);
+		  if(outlet == INLET_HOLE){
+              hull(){
+                    translate([inlet_x,inlet_y-in/2,in/2]) translate([0,0,0]) sphere(r=in/2-wall);
+                    translate([inlet_x-in/2,inlet_y-in/2,in/2+5]) translate([0,0,0]) sphere(r=ball_rad);
                 }
+            }
+            
+            if(outlet == INLET_SLOT){
+              hull(){
+                    translate([inlet_x,inlet_y-in/2,in/2]) translate([0,0,0]) sphere(r=in/2-wall);
+                    translate([inlet_x-in/2,inlet_y-in/2,in/2+5]) translate([0,0,0]) sphere(r=ball_rad);
+                    translate([inlet_x,inlet_y-in/2-in,in/2]) translate([0,0,0]) sphere(r=in/2-wall);
+                    translate([inlet_x-in/2,inlet_y-in/2-in,in/2+5]) translate([0,0,0]) sphere(r=ball_rad);
+                }
+            }
         
         //scalloped entry
         for(i=[0:in:inlet_y-1]){
@@ -206,7 +243,9 @@ module square_peg(){
     }
 }
 
-module peg(){
+//added the option to make the peg have a locking pin, instead of a hook.
+//todo: add an option for a long pin with a screwhole in it
+module peg(pin=false){
     $fn=16;
     
     extra_inset = 2;
@@ -220,21 +259,23 @@ module peg(){
     translate([peg_sep/2,0,peg_sep*1.5]) 
     difference(){
         union(){
-          //upper peg
-            #translate([0,peg_thick+peg_rad-rear_inset,0]) rotate([90,0,0]) cylinder(r1=peg_rad*3/4-slop/2, r2=peg_rad-slop, h=peg_thick+peg_rad-rear_inset);
-				
-			translate([0,-wall+.1,0]) rotate([90,0,0]) cylinder(r1=peg_rad, r2=peg_rad*3/4, h=wall+peg_rad-front_inset);
-
-            //rear hook
+          //top rear
+            translate([0,peg_thick+peg_rad-rear_inset,0]) rotate([90,0,0]) cylinder(r1=peg_rad*3/4-slop/2, r2=peg_rad-slop, h=peg_thick+peg_rad-rear_inset);
             translate([0,peg_thick+peg_rad-rear_inset,0]) sphere(r=peg_rad*3/4-slop/2);
             translate([0,peg_thick+peg_rad-rear_inset,0]) rotate([-peg_angle,0,0]) cylinder(r1=peg_rad*3/4-slop/2, r2=peg_rad*3/4-slop, h=peg_thick);
             translate([0,peg_thick+peg_rad-rear_inset,0]) rotate([-peg_angle,0,0]) translate([0,0,peg_thick]) sphere(r=peg_rad*3/4-slop);
             
-            //front hook
-            translate([0,-wall*2-front_inset,0]) sphere(r=peg_rad*3/4);
-            translate([0,-wall*2-front_inset,0]) rotate([peg_angle,0,0]) cylinder(r1=peg_rad*3/4, r2=peg_rad*3/4-slop, h=wall*2);
-            translate([0,-wall*2-front_inset,0]) rotate([peg_angle,0,0]) translate([0,0,wall*2]) sphere(r=peg_rad*3/4-slop);
-            
+			
+            //top front
+            if(pin==false){
+                translate([0,-wall+.1,0]) rotate([90,0,0]) cylinder(r1=peg_rad, r2=peg_rad*3/4, h=wall+peg_rad-front_inset);
+                translate([0,-wall*2-front_inset,0]) sphere(r=peg_rad*3/4);
+                translate([0,-wall*2-front_inset,0]) rotate([peg_angle,0,0]) cylinder(r1=peg_rad*3/4, r2=peg_rad*3/4-slop, h=wall*2);
+                translate([0,-wall*2-front_inset,0]) rotate([peg_angle,0,0]) translate([0,0,wall*2]) sphere(r=peg_rad*3/4-slop);
+            }else{
+                //draw a pin connector instead
+                rotate([90,0,0]) rotate([0,0,90]) translate([0,0,wall/2])pin_vertical(h=wall*2+wall/2,r=pin_rad,lh=wall,lt=pin_lt,t=pin_tolerance,cut=false);
+            }
             
             //connect 'em
             hull(){

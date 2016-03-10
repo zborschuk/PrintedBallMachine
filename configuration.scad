@@ -19,3 +19,11 @@ track_rad = in/2-wall; //this makes the track an inch wide
 inlet_x = in;
 inlet_y = in*2;
 inlet_z = in*1;
+INLET_HOLE = 1;
+INLET_SLOT = 2;
+INLET_NONE = 0;
+
+//pin variables
+pin_tolerance = .3;
+pin_rad = 3;
+pin_lt = .8;
