@@ -138,8 +138,7 @@ module reverse_module(size = [4, -.5]){
  * 
  * hanger_height: Given in units of pegboard, how tall your hanger should be.  Set to 0 for no hanger.
  */
-module inlet(height = 1, width = 2, length = 1, hanger_height=1, lift=5, outlet=INLET_HOLE){
-    inset = inlet_x-ball_rad*2-wall*2;
+module inlet(height = 1, width = 2, length = 1, hanger_height=1, lift=5, outlet=INLET_HOLE, inset = inlet_x-ball_rad*2-wall*2){
     //slope = .25*in;
     
     side_supports = length-1;

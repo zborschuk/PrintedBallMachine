@@ -24,6 +24,6 @@ INLET_SLOT = 2;
 INLET_NONE = 0;
 
 //pin variables
-pin_tolerance = .3;
-pin_rad = 3;
-pin_lt = .8;
+pin_tolerance = .25;
+pin_rad = 4;
+pin_lt = 1;

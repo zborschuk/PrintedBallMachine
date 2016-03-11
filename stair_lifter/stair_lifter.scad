@@ -13,33 +13,32 @@ m3_nut_rad = 3.5;
 
 //pin variables moved to configuration.scad
 
-
-drive_rad = motor_rad+shaft_offset-wall-.5;
-echo(drive_rad);
-
 %pegboard([10,10]);
 %cube([200,200,1],center=true);
 
+//rotate([-90,0,0])
 stair_inlet();
-//move to proper location
-translate([peg_sep,-peg_sep,peg_sep-motor_rad-shaft_offset])
-rotate([90,0,0])
-drive_gear();
+
+translate([peg_sep,-peg_sep,peg_sep-motor_rad-shaft_offset]) rotate([0,90,0]) drive_shaft(length=in+.5);
+
+translate([peg_sep*2+1,-peg_sep,peg_sep-motor_rad-shaft_offset]) rotate([0,90,0]) rotate([0,0,90]) cam_shaft();
+
+translate([peg_sep*2+1,0,peg_sep-wall]) stair_step();
 
 module stair_inlet(){
     $fn=30;
     difference(){
         union(){
-            inlet(height=2, width=2, length=2, outlet=INLET_SLOT, hanger_height=1);
+            inlet(height=2, width=2, length=2, outlet=INLET_SLOT, hanger_height=1, inset=0);
             
             //add a motor mount underneath the inlet
-            translate([peg_sep,0,peg_sep-motor_rad]) {
+            rotate([0,0,-90]) translate([peg_sep,peg_sep,peg_sep-motor_rad]) {
                 %rotate([90,0,0]) cylinder(r=motor_rad, h=in);
                 for(i=[-motor_mount_rad, motor_mount_rad]){
                     translate([i,0,0]) difference(){
                         hull(){
-                            rotate([90,0,0]) rotate([0,0,45]) cylinder(r=m3_rad+wall*2, h=in-wall, $fn=4);
-                            translate([0,0,motor_rad-wall]) rotate([90,0,0]) rotate([0,0,45]) cylinder(r=m3_rad+wall*2, h=in-wall, $fn=4);
+                            rotate([90,0,0]) rotate([0,0,45]) cylinder(r=m3_rad+wall*2, h=in/2, $fn=4);
+                            translate([0,0,motor_rad-wall]) rotate([90,0,0]) rotate([0,0,45]) cylinder(r=m3_rad+wall*2, h=in/2, $fn=4);
                         }
                         
                         //motor mounting holes
@@ -48,79 +47,90 @@ module stair_inlet(){
                         
                         //nut traps
                         translate([0,-peg_sep/2+wall,0]) hull(){
-                            rotate([90,0,0]) cylinder(r=m3_nut_rad, h=wall, $fn=6);
-                            translate([i,0,0]) rotate([90,0,0]) cylinder(r=m3_nut_rad, h=wall, $fn=6);
+                            rotate([90,0,0]) cylinder(r1=m3_nut_rad, r2=m3_nut_rad+slop, h=wall+1, $fn=6);
+                            //translate([i,0,0]) rotate([90,0,0]) cylinder(r=m3_nut_rad, h=wall, $fn=6);
                         }
                     }
                 }
             }
         }
-        translate([peg_sep,0,peg_sep-motor_rad]) rotate([90,0,0]) cylinder(r=motor_rad, h=in);
+        rotate([0,0,-90]) translate([peg_sep,peg_sep+.1,peg_sep-motor_rad]) rotate([90,0,0]) cylinder(r=motor_rad, h=in);
     }
 }
 
-module drive_gear(){
+module cam_shaft(width = peg_sep*2, length = ball_rad*2, max_rad = ball_rad*2.5){
+    $fn=60;
+    base_rad = ball_rad;
+    end_rad = wall;
+    
     difference(){
         union(){
-            cylinder(r=drive_rad, h=wall);
-            //translate([0,rad-pin_rad,0]) cylinder(r=pin_rad, h=wall*2);
-            translate([0,drive_rad-pin_rad,0]) {
-                //pin(h=wall*2,r=pin_rad,lh=wall,lt=1,t=.3);
-                translate([0,0,wall/2])pin_vertical(h=wall*2+wall/2,r=pin_rad,lh=wall,lt=pin_lt,t=pin_tolerance,cut=false);
+            drive_shaft(length=length);
+            //the cam
+            hull(){
+                cylinder(r=base_rad, h=length);
+                translate([0,max_rad-end_rad,length/3]) cylinder(r=end_rad, h=length/3);
             }
         }
-        d_slot(shaft=shaft, height=20, dflat=dflat);
+        
+        //thread path
+        translate([0,0,-.1]) cylinder(r=m3_rad+slop, h=length+wall+.2);
     }
 }
 
-bar();
-
-//link stuff together
-module bar(slot = peg_sep/2, length=peg_sep*2){
+module drive_shaft(length=peg_sep*2, dslot = false){
     $fn=30;
+    rad = (shaft/2+wall)/cos(180/6);
+    con_rad = rad/2+.8;
     difference(){
         union(){
-            //body
-            translate([0,0,wall/2]) cube([length, wall*2, wall], center=true);
-            cylinder(r=pin_rad+wall, h=wall);
-            
-            //slot side
-            translate([-length/2,0,0]) hull()
-                for(i=[-slot/2, slot/2]){
-                    translate([i,0,0]) cylinder(r=pin_rad+wall, h=wall);
-                }
-                
-            //peg side
-            translate([length/2,0,0]) {
-                translate([0,0,wall/2])pin_vertical(h=wall*2+wall/2,r=pin_rad,lh=wall,lt=pin_lt,t=pin_tolerance,cut=false);
-                cylinder(r=pin_rad+wall, h=wall);
-            }
+            cylinder(r=rad, h=length, $fn=6);
+            translate([0,0,length-.1]) cylinder(r=con_rad, h=wall+.1, $fn=6);
         }
         
-        //slot
-        translate([-length/2,0,0]) hull()
-            for(i=[-slot/2, slot/2]){
-                translate([i,0,0]) cylinder(r=pin_rad+slop, h=wall*3, center=true);
-            }
-        
-        //pivot
-        cylinder(r=pin_rad+slop, h=wall*3, center=true);
+        translate([0,0,-.1]) cylinder(r=m3_rad+slop, h=length+wall+.2);
+        if(dslot==true){
+            d_slot(shaft=shaft, height=wall+.1, tolerance = slop, dflat=dflat, $fn=30);
+        }else{
+            translate([0,0,-.1]) cylinder(r1=con_rad+slop*2, r2=con_rad+slop, h=wall+.2, $fn=6);
+            translate([0,0,-.1]) cylinder(r1=con_rad+slop*4, r2=con_rad+slop*2, h=.5, $fn=6);
+        }
     }
 }
 
-//special peg for mounting the bars
-module bar_peg(){
-}
-
-module stair_step(height=15){
+module stair_step(cam_height=0){
+    slope = -15;
+    height = ball_rad*2;
+    inheight = ball_rad*2+wall;
+    width = peg_sep*2;
+    length = ball_rad*2;
+    difference(){
+        union(){
+            hull(){
+                translate([0,-width,0]) cube([.1,width,height+wall]);
+                translate([length,-width,0]) cube([.1,width,height]);
+            }
+            
+            //cam engagement
+            difference(){
+                translate([length/3,-width,-cam_height-peg_sep]) cube([length/3, width,cam_height+peg_sep+.1]);
+                translate([length/3,-width/2,-cam_height-peg_sep]) scale([1,1.5,1]) rotate([0,90,0]) cylinder(r=cam_height+peg_sep,h=length, center=true);
+            }
+        }
+        hull(){
+                translate([-.1,-width+wall,wall*1.5]) cube([.1,width-wall*2,inheight]);
+                translate([length+.1,-width+wall,wall]) cube([.1,width-wall*2,height]);
+            }
+    }
+    
 }
 
 module d_slot(shaft=6, height=10, tolerance = .2, dflat=.25, $fn=30){
     translate([0,0,-.1]){
        difference(){ 
-           cylinder(r1=shaft/2+tolerance, r2=shaft/2+tolerance/2, h=height+.01);
-           translate([-shaft/2,shaft/2-dflat,0]) cube([shaft, shaft, height+.01]);
-           translate([-shaft/2,-shaft/2-shaft+dflat,0]) cube([shaft, shaft, height+.01]);
+           cylinder(r1=shaft/2+tolerance, r2=shaft/2+tolerance/2, h=height+.1);
+           translate([-shaft/2,shaft/2-dflat,0]) cube([shaft, shaft, height+.1]);
+           translate([-shaft/2,-shaft/2-shaft+dflat,0]) cube([shaft, shaft, height+.1]);
        }
     }
 }

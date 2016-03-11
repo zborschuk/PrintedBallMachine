@@ -64,7 +64,7 @@ module bearing_inlet(){
         }
         
         translate([in*4.5,0,in*3]) rotate([90,0,0]){
-                translate([0,0,in*1.5+.1]) cylinder(r=1.5, r2=1.7, h = in*1.25, $fn=30, center=true);
+                translate([0,0,in*1.5+.1]) cylinder(r=1.45, r2=1.6, h = in*1.25, $fn=30, center=true);
             }
         
         hanger(solid=-1, hole=[5,4], drop=in*6.5);
