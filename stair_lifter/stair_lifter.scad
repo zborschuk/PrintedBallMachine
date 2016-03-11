@@ -13,17 +13,46 @@ m3_nut_rad = 3.5;
 
 //pin variables moved to configuration.scad
 
+stab_rad=4; //radius of stabilizer triangle
+
 %pegboard([10,10]);
 %cube([200,200,1],center=true);
 
 //rotate([-90,0,0])
 stair_inlet();
 
-translate([peg_sep,-peg_sep,peg_sep-motor_rad-shaft_offset]) rotate([0,90,0]) drive_shaft(length=in+.5);
+cam_length = ball_rad*2+2;
 
-translate([peg_sep*2+1,-peg_sep,peg_sep-motor_rad-shaft_offset]) rotate([0,90,0]) rotate([0,0,90]) cam_shaft();
+translate([peg_sep,-peg_sep,peg_sep-motor_rad-shaft_offset]) rotate([0,90,0]) difference(){
+    drive_shaft(length=in+.5, solid=1);
+    drive_shaft(length=in+.5, solid=0, dslot=true);
+}
 
-translate([peg_sep*2+1,0,peg_sep-wall]) stair_step();
+cam_angle = 180;
+
+
+
+cam_lift = max(0,ball_rad*1.5*cos(cam_angle-90));
+cam_lift_2 = max(0,ball_rad*1.5*cos(cam_angle+0));
+
+echo(cam_lift);
+echo(cam_lift_2);
+
+
+step_height = 10;
+
+translate([peg_sep*2+1,-peg_sep,peg_sep-motor_rad-shaft_offset]){
+    rotate([0,90,0]) rotate([0,0,cam_angle]) cam_shaft(width = peg_sep*2, length = cam_length, max_rad = ball_rad*2.5);
+    translate([cam_length,0,0]) rotate([0,90,0]) rotate([0,0,cam_angle+90]) cam_shaft(width = peg_sep*2, length = cam_length, max_rad = ball_rad*2.5);
+}
+
+translate([peg_sep*2+1,-wall,peg_sep/2-3]){
+    !translate([0,0,cam_lift]) stair_step(cam_height=14, length=cam_length);
+    translate([cam_length,0,cam_lift_2]) stair_step(cam_height=14+step_height, length=cam_length);
+}
+
+translate([peg_sep*2+1,0,peg_sep]) guide_rail(cam_length=cam_length, step_height=step_height, num_cams=4);
+
 
 module stair_inlet(){
     $fn=30;
@@ -65,7 +94,7 @@ module cam_shaft(width = peg_sep*2, length = ball_rad*2, max_rad = ball_rad*2.5)
     
     difference(){
         union(){
-            drive_shaft(length=length);
+            drive_shaft(length=length, solid=1);
             //the cam
             hull(){
                 cylinder(r=base_rad, h=length);
@@ -74,20 +103,21 @@ module cam_shaft(width = peg_sep*2, length = ball_rad*2, max_rad = ball_rad*2.5)
         }
         
         //thread path
-        translate([0,0,-.1]) cylinder(r=m3_rad+slop, h=length+wall+.2);
+        drive_shaft(length=length, solid=-1);
     }
 }
 
-module drive_shaft(length=peg_sep*2, dslot = false){
+module drive_shaft(length=peg_sep*2, dslot = false, solid=1){
     $fn=30;
     rad = (shaft/2+wall)/cos(180/6);
     con_rad = rad/2+.8;
-    difference(){
+    if(solid>=1){
         union(){
             cylinder(r=rad, h=length, $fn=6);
             translate([0,0,length-.1]) cylinder(r=con_rad, h=wall+.1, $fn=6);
         }
-        
+    }
+    if(solid <=1){
         translate([0,0,-.1]) cylinder(r=m3_rad+slop, h=length+wall+.2);
         if(dslot==true){
             d_slot(shaft=shaft, height=wall+.1, tolerance = slop, dflat=dflat, $fn=30);
@@ -98,31 +128,37 @@ module drive_shaft(length=peg_sep*2, dslot = false){
     }
 }
 
-module stair_step(cam_height=0){
-    slope = -15;
+module stair_step(cam_height=0, length = ball_rad*2-1){
     height = ball_rad*2;
     inheight = ball_rad*2+wall;
-    width = peg_sep*2;
-    length = ball_rad*2;
+    width = peg_sep*2-wall;
+    
     difference(){
         union(){
-            hull(){
-                translate([0,-width,0]) cube([.1,width,height+wall]);
+            %translate([length/2,-ball_rad-wall*2,cam_height+wall+ball_rad]) sphere(r=ball_rad);
+            translate([0,0,cam_height]) hull(){
+                translate([0,-width,wall*.5]) cube([.1,width,height]);
                 translate([length,-width,0]) cube([.1,width,height]);
             }
             
             //cam engagement
             difference(){
-                translate([length/3,-width,-cam_height-peg_sep]) cube([length/3, width,cam_height+peg_sep+.1]);
-                translate([length/3,-width/2,-cam_height-peg_sep]) scale([1,1.5,1]) rotate([0,90,0]) cylinder(r=cam_height+peg_sep,h=length, center=true);
+                translate([length/3,-width,-peg_sep]) cube([length/3, width-wall,cam_height+peg_sep+wall]);
+                translate([length/3,-width/2,-cam_height-peg_sep]) scale([1,1.5,1]) rotate([0,90,0]) cylinder(r=cam_height+peg_sep,h=length, center=true, $fn=90);
             }
         }
-        hull(){
+        translate([0,0,cam_height]) difference(){
+            hull(){
                 translate([-.1,-width+wall,wall*1.5]) cube([.1,width-wall*2,inheight]);
-                translate([length+.1,-width+wall,wall]) cube([.1,width-wall*2,height]);
+                translate([length+.1,-width+wall,wall*.75]) cube([.1,width-wall*2,height]);
             }
+            //leave a bump so we have room for the stabilizer
+            translate([length/2,0,0]) scale([2.25,1,1]) rotate([0,0,22.5]) cylinder(r=stab_rad+slop, h=height*2, $fn=8);
+        }
+        
+        //cutout for the slot
+        translate([length/2,0,0]) rotate([0,0,90]) cylinder(r=stab_rad, h=height*3, $fn=3);
     }
-    
 }
 
 module d_slot(shaft=6, height=10, tolerance = .2, dflat=.25, $fn=30){
@@ -135,5 +171,36 @@ module d_slot(shaft=6, height=10, tolerance = .2, dflat=.25, $fn=30){
     }
 }
 
+module guide_rail(cam_length=cam_length, step_height=step_height, num_cams=3){
+    
+    length = cam_length*num_cams;
+    num_hangers = length/in;
+    height = in;
+    
+    difference(){
+        union(){
+            for(i=[1:num_hangers]){
+                //hanger(solid=1, hole=[i,2], drop=in);
+            }
+            
+            //body
+            translate([0,-wall+.5,0]) cube([length, wall-.5, height]);
+            
+            //rails
+            translate([0,-wall,0]) for(i=[0:num_cams-1]){
+                translate([cam_length/2+cam_length*i,0,0]) rotate([0,0,90]) cylinder(r=stab_rad-slop*2, h=height, $fn=3);
+            }
+            
+        }
+        for(i=[1:num_hangers]){
+            hanger(solid=-1, hole=[i,2], drop=in);
+        }
+        
+        //clear the back
+        translate([0,100,0]) cube([200,200,200], center=true);
+    }
+}
+
+
 //next section
-%translate([in*5,0,in]) inlet(height=5);
+%translate([in*5,0,in]) inlet(height=2);
