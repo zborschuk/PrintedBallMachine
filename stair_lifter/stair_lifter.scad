@@ -47,7 +47,7 @@ translate([peg_sep*2+1,-peg_sep,peg_sep-motor_rad-shaft_offset]){
 }
 
 translate([peg_sep*2+1,-wall,peg_sep/2-3]){
-    !translate([0,0,cam_lift]) stair_step(cam_height=14, length=cam_length);
+    translate([0,0,cam_lift]) stair_step(cam_height=14, length=cam_length);
     translate([cam_length,0,cam_lift_2]) stair_step(cam_height=14+step_height, length=cam_length);
 }
 
@@ -174,26 +174,37 @@ module d_slot(shaft=6, height=10, tolerance = .2, dflat=.25, $fn=30){
 module guide_rail(cam_length=cam_length, step_height=step_height, num_cams=3){
     
     length = cam_length*num_cams;
-    num_hangers = length/in;
-    height = in;
-    
+    num_hangers = ceil(length/in);
+    height1 = step_height*num_cams+in/2;
+	
+	 echo(height1);
+
+	 height_halves = ceil(height1/(in/2));
+	 echo(height_halves);
+	
+	 height = height_halves*25.4/2;
+
+	 hanger_height = ceil(height_halves/2);
+	 echo(height);    
+	 echo(hanger_height);
+
     difference(){
         union(){
             for(i=[1:num_hangers]){
-                //hanger(solid=1, hole=[i,2], drop=in);
+                hanger(solid=1, hole=[i,hanger_height], drop=in);
             }
             
             //body
-            translate([0,-wall+.5,0]) cube([length, wall-.5, height]);
+            translate([0,-wall,0]) cube([length, wall, height]);
             
             //rails
-            translate([0,-wall,0]) for(i=[0:num_cams-1]){
+            translate([0,-wall-.5,0]) for(i=[0:num_cams-1]){
                 translate([cam_length/2+cam_length*i,0,0]) rotate([0,0,90]) cylinder(r=stab_rad-slop*2, h=height, $fn=3);
             }
             
         }
         for(i=[1:num_hangers]){
-            hanger(solid=-1, hole=[i,2], drop=in);
+            hanger(solid=-1, hole=[i,hanger_height], drop=in);
         }
         
         //clear the back
