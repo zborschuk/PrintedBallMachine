@@ -4,7 +4,7 @@ include<pins.scad>
 %translate([0,0,-in*4]) pegboard([12,12]);
 
 //peg for printing
-!translate([0,peg_thick,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90]) peg(pin=true);
+translate([0,peg_thick,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90]) peg(pin=true);
 
 //simple slope!
 //rotate([-90,0,0])
@@ -23,10 +23,14 @@ slope_module();
 offset_slope_module();
 
 translate([in*10,0,-in*2]) 
-//rotate([-90,0,0])
+rotate([-90,0,0])
 reverse_module();
 
-inlet();
+!intersection(){
+    rotate([-90,0,0]) inlet(length=4, outlet=NONE);
+    rotate([-90,0,0]) translate([in*4,0,0]) mirror([i,0,0]) inlet(length=4, outlet=NONE);
+}
+
 
 //the size is the X and Y number of holes in the peg board.
 //This is meant to be used as a visual reference when designing your module.
@@ -111,7 +115,7 @@ module reverse_module(size = [4, -.5]){
             //support
             translate([peg_sep/2,-peg_sep,peg_sep*1.5]) cube([peg_sep-2,wall/2,peg_sep], center=true);
             
-            hanger(solid=1, hole=[5,3], drop = in/2);
+            hanger(solid=1, hole=[4,4], drop = in*1.33);
         }
         //hole in the inlet
         //translate([in,0,in*2]) track(rise=size[1], run=size[0], solid=-1, hanger=0, extra_len=in-wall*1.5);
@@ -119,7 +123,7 @@ module reverse_module(size = [4, -.5]){
 		  //cut the end flat
 		  translate([50+in*size[0]+in,0,in*2]) cube([100,100,100], center=true);
         
-        hanger(solid=-1, hole=[5,3], drop = in/2);
+        hanger(solid=-1, hole=[4,4], drop = in*1.33);
     }
 }
 
@@ -167,29 +171,35 @@ module inlet(height = 1, width = 2, length = 1, hanger_height=1, lift=5, outlet=
         }
         
         //hollow center
-        hull(){
-            intersection(){
-                //ball divot
-                hull(){
-                    translate([inlet_x,inlet_y-in/2,in/2]) translate([0,0,0]) sphere(r=in/2-wall);
-                    translate([-inlet_x,inlet_y-in/2,in/2+5*length]) translate([0,0,0]) sphere(r=ball_rad);
+        difference(){
+            hull(){
+                intersection(){
+                    //ball divot
+                    hull(){
+                        translate([inlet_x,inlet_y-in/2,in/2]) translate([0,0,0]) sphere(r=in/2-wall);
+                        translate([-inlet_x,inlet_y-in/2,in/2+5*length]) translate([0,0,0]) sphere(r=ball_rad);
+                    }
+                    hull(){
+                        translate([wall,wall,0]) cube([inlet_x-wall*2,inlet_y-wall*2,.1]);
+                        translate([wall,wall,inlet_z+lift]) cube([inlet_x-wall*2+inset,inlet_y-wall*2,.1]);
+                    } 
+                    //translate([wall,wall,wall]) cube([inlet_x-wall*2-inset,inlet_y-wall*2,inlet_z]);
                 }
-                hull(){
-                    translate([wall,wall,0]) cube([inlet_x-wall*2,inlet_y-wall*2,.1]);
-                    translate([wall,wall,inlet_z+lift]) cube([inlet_x-wall*2+inset,inlet_y-wall*2,.1]);
-                }
-                //translate([wall,wall,wall]) cube([inlet_x-wall*2-inset,inlet_y-wall*2,inlet_z]);
+                translate([wall,wall,wall*2.5]) cube([inlet_x-wall*2,inlet_y-wall*2,.1]);
+                translate([0,wall,inlet_z-drop_top+.1]) rotate([0,-lift_angle,0])  translate([wall,0,0]) cube([inlet_x+inset-wall*2,inlet_y-wall*2,.1]);
             }
-            translate([wall,wall,wall*2.5]) cube([inlet_x-wall*2,inlet_y-wall*2,.1]);
-            *translate([wall,wall,inlet_z]) cube([inlet_x-wall*2+inset,inlet_y-wall*2,.1]);
-            translate([0,wall,inlet_z-drop_top+.1]) rotate([0,-lift_angle,0])  translate([wall,0,0]) cube([inlet_x+inset-wall*2,inlet_y-wall*2,.1]);
+            
+            //wall supports
+            for(i=[1:length-1]){
+                translate([i*in,0,0]) rotate([30,0,0]) translate([0,0,in/4]) cube([wall/2, in+2*i,in+2*i], center=true);
+            }
         }
 
 		  //ball exit
 		  if(outlet == INLET_HOLE){
               hull(){
                     translate([inlet_x,inlet_y-in/2,in/2]) translate([0,0,0]) sphere(r=in/2-wall);
-                    translate([inlet_x-in/2,inlet_y-in/2,in/2+5]) translate([0,0,0]) sphere(r=ball_rad);
+                    translate([inlet_x-in/2,inlet_y-in/2,in/2]) translate([0,0,0]) sphere(r=ball_rad);
                 }
             }
             
