@@ -319,8 +319,8 @@ module hanger(solid=0, hole=[1,4], slot_size = 0, drop = in/2, rot = 0){
     translate([in*hole[0]-peg_sep/2, 0, in*(hole[1]-1)]) 
     if(solid <= 0) union(){
         for(i=[0:1]) hull(){
-            translate([-slot_size/2,0,peg_sep/2]) rotate([90,0,0]) translate([0,0,wall/2]) mirror([0,0,i]) translate([0,0,-.05]) cylinder(r1=peg_rad+slop, r2=peg_rad+wall, h=wall);
-            translate([slot_size/2,0,peg_sep/2]) rotate([90,0,0]) translate([0,0,wall/2]) mirror([0,0,i]) translate([0,0,-.05]) cylinder(r1=peg_rad+slop, r2=peg_rad+wall, h=wall);
+            translate([-slot_size/2,0,peg_sep/2]) rotate([90,0,0]) translate([0,0,wall/2]) mirror([0,0,i]) translate([0,0,-.05]) cylinder(r1=peg_rad+slop, r2=peg_rad+wall+wall, h=wall*2);
+            translate([slot_size/2,0,peg_sep/2]) rotate([90,0,0]) translate([0,0,wall/2]) mirror([0,0,i]) translate([0,0,-.05]) cylinder(r1=peg_rad+slop, r2=peg_rad+wall+wall, h=wall*2);
         }
     }
 }
