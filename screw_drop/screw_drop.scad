@@ -7,6 +7,7 @@ dflat=.2;
 
 %pegboard([10,10]);
 
+//uncomment for printing
 //!rotate([-90,0,0])
 screw_drop();
 
@@ -34,11 +35,11 @@ module screw_drop(){
                 translate([peg_sep*4+50-1,0,0]) cube([100,100,200], center=true);
             }
             
-            hanger(solid=1, hole=[3,2], drop=in*3.4, rot=-15);
+            hanger(solid=1, hole=[4,2], drop=in*3.1, rot=12);
             
         }
         
-        hanger(solid=-1, hole=[3,2], drop=in*6.5, rot=-15);
+        hanger(solid=-1, hole=[4,2], drop=in*3.1, rot=12);
         
         //the back isn't quite flat
         translate([peg_sep*2,100,0]) cube([200,200,200], center=true);
