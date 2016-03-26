@@ -1,10 +1,7 @@
 include<configuration.scad>
-include<pins.scad>
+use <pins.scad>
 
 %translate([0,0,-in*4]) pegboard([12,12]);
-
-//peg for printing
-translate([0,peg_thick,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90]) peg(pin=true);
 
 //simple slope!
 //rotate([-90,0,0])
@@ -26,7 +23,7 @@ translate([in*10,0,-in*2])
 rotate([-90,0,0])
 reverse_module();
 
-!intersection(){
+intersection(){
     rotate([-90,0,0]) inlet(length=4, outlet=NONE);
     rotate([-90,0,0]) translate([in*4,0,0]) mirror([i,0,0]) inlet(length=4, outlet=NONE);
 }
@@ -220,89 +217,7 @@ module inlet(height = 1, width = 2, length = 1, hanger_height=1, lift=5, outlet=
     }
 }
 
-//debating remaking the peg square...
-//this is unfinished.  The round peg works.
-module square_peg(){
-    peg_sq = (peg_rad*2)/sqrt(2);
-    
-    angle=15;
-    
-    union(){
-        //through the pegboard
-        translate([0,-peg_sq/2,0]) cube([peg_sq, peg_thick+peg_sq, peg_sq], center=true);
-        //back curve
-        intersection(){
-            translate([0,peg_thick/2,peg_sq/2]) rotate([0,90,0]) rotate_extrude(angle=90, $fn=30){
-                translate([peg_sq/2,0,0]) square([peg_sq, peg_sq], center=true);
-            }
-            translate([-peg_sq/2,peg_thick/2,peg_sq/2]) rotate([-90-angle,0,0]) cube([peg_sq, peg_thick, peg_sq]);
-        }
-        //back peg
-        translate([-peg_sq/2,peg_thick/2,peg_sq/2]) rotate([-90-angle,0,0]) hull(){
-            cube([peg_sq, .1, peg_sq]);
-            #translate([0,-4,1]) cube([peg_sq, .1, peg_sq-2]);
-        }
-        //front curve
-        intersection(){
-            translate([0,-peg_thick/2-peg_sq,peg_sq/2]) rotate([0,90,0]) rotate_extrude(angle=90, $fn=30){
-                translate([peg_sq/2,0,0]) square([peg_sq, peg_sq], center=true);
-            }
-            translate([-peg_sq/2,-peg_thick/2-peg_sq,peg_sq/2]) rotate([-90-angle,0,0]) cube([peg_sq, peg_thick, peg_sq]);
-        }
-    }
-}
-
-//added the option to make the peg have a locking pin, instead of a hook.
-//todo: add an option for a long pin with a screwhole in it
-module peg(pin=false){
-    $fn=16;
-    
-    extra_inset = 2;
-    
-    peg_angle = 20;
-    rear_inset = peg_rad*tan(peg_angle)+extra_inset;
-    front_inset = rear_inset+slop-extra_inset;
-    
-    cutoff=1;
-    
-    translate([peg_sep/2,0,peg_sep*1.5]) 
-    difference(){
-        union(){
-          //top rear
-            translate([0,peg_thick+peg_rad-rear_inset,0]) rotate([90,0,0]) cylinder(r1=peg_rad*3/4-slop/2, r2=peg_rad-slop, h=peg_thick+peg_rad-rear_inset);
-            translate([0,peg_thick+peg_rad-rear_inset,0]) sphere(r=peg_rad*3/4-slop/2);
-            translate([0,peg_thick+peg_rad-rear_inset,0]) rotate([-peg_angle,0,0]) cylinder(r1=peg_rad*3/4-slop/2, r2=peg_rad*3/4-slop, h=peg_thick);
-            translate([0,peg_thick+peg_rad-rear_inset,0]) rotate([-peg_angle,0,0]) translate([0,0,peg_thick]) sphere(r=peg_rad*3/4-slop);
-            
-			
-            //top front
-            if(pin==false){
-                translate([0,-wall+.1,0]) rotate([90,0,0]) cylinder(r1=peg_rad, r2=peg_rad*3/4, h=wall+peg_rad-front_inset);
-                translate([0,-wall*2-front_inset,0]) sphere(r=peg_rad*3/4);
-                translate([0,-wall*2-front_inset,0]) rotate([peg_angle,0,0]) cylinder(r1=peg_rad*3/4, r2=peg_rad*3/4-slop, h=wall*2);
-                translate([0,-wall*2-front_inset,0]) rotate([peg_angle,0,0]) translate([0,0,wall*2]) sphere(r=peg_rad*3/4-slop);
-            }else{
-                //draw a pin connector instead
-                rotate([90,0,0]) rotate([0,0,90]) translate([0,0,wall/2])pin_vertical(h=wall*2+wall/2,r=pin_rad,lh=wall,lt=pin_lt,t=pin_tolerance,cut=false);
-            }
-            
-            //connect 'em
-            hull(){
-                rotate([90,0,0]) cylinder(r=peg_rad, h=wall);
-                translate([0,0,-peg_sep*1.5]) rotate([90,0,0]) cylinder(r=peg_rad, h=wall);
-            }
-            
-            //lower peg
-            translate([0,0,-peg_sep]) rotate([90,0,0]) translate([0,0,-peg_thick]) cylinder(r2=peg_rad, r1=peg_rad-slop, h=peg_thick+wall);
-            translate([0,peg_thick,-peg_sep]) sphere(r=peg_rad-slop);
-        }
-        
-        //cut off top and bottom for easier printing
-        translate([50+peg_rad-cutoff,0,0]) cube([100,100,100], center=true);
-        translate([-50-peg_rad+cutoff,0,0]) cube([100,100,100], center=true);
-    }
-}
-
+//used to hang everything :-)
 module hanger(solid=0, hole=[1,4], slot_size = 0, drop = in/2, rot = 0){
     offset = (track_rad+wall);
     

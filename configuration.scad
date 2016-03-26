@@ -21,7 +21,12 @@ inlet_y = in*2;
 inlet_z = in*1;
 INLET_HOLE = 1;
 INLET_SLOT = 2;
-INLET_NONE = 0;
+INLET_NONE=0;
+NONE = 0;
+
+PEG_PIN = 1;
+PEG_HOOK = 2;
+PEG_NONE = 0;
 
 //pin variables
 pin_tolerance = .25;
