@@ -6,8 +6,9 @@ width = in-1;
 length = in;
 hook_width = wall;
 core = width-wall-wall-1;
-shaft=wall/2;
+shaft=2;
 thickness = wall-1;
+
 
 //ball grabber
 
@@ -17,7 +18,7 @@ stab_rad=4; //radius of stabilizer triangle
 %pegboard([10,10]);
 %cube([200,200,1],center=true);
 
-%translate([0,0,ball_rad+thickness]) sphere(r=ball_rad);
+
 
 link();
 
@@ -27,10 +28,20 @@ module link(){
     translate([0,0,thickness/2]) 
     difference(){
         union(){
-            cube([length,core,thickness], center=true);
+            translate([-shaft/2,0,0]) cube([length+shaft,core,thickness], center=true);
             
-            //hook interface
-            translate([-length/2,0,0]) rotate([90,0,0]) cylinder(r=shaft, h=width, center=true);
+            //hook interface rod
+            translate([-length/2,0,thickness+shaft/2]) rotate([90,0,0]) difference(){
+                union(){
+                    cylinder(r=shaft, h=width, center=true);
+                    translate([0,-shaft/2,0]) scale([1,1.5,1]) cylinder(r=shaft, h=core, center=true);
+                }
+                hull(){
+                    translate([5,ball_rad-shaft,0]) sphere(ball_rad+.2);
+                    translate([-5,ball_rad-shaft,0]) sphere(ball_rad+.2);
+                }
+            }
+            
             
             //hooks
             //cube([hook]);
@@ -47,12 +58,17 @@ module link(){
             }
             
             //ball grabber
-            difference(){
-                translate([0,0,ball_rad]) rotate([90,0,0]) cylinder(r=ball_rad+wall, h=ball_rad, center=true);
+            translate([-shaft*2-1,0,0]) difference(){
+                %translate([0,0,ball_rad+thickness]) sphere(r=ball_rad);
+                hull(){
+                    translate([0,0,ball_rad]) rotate([90,0,0]) cylinder(r=ball_rad+wall, h=ball_rad+wall, center=true);
+                    translate([0,0,ball_rad+wall]) rotate([90,0,0]) cylinder(r=ball_rad+wall, h=ball_rad+wall, center=true);
+                }
                 
+                //cutout
                 hull(){
                     translate([0,0,ball_rad+wall/2]) rotate([90,0,0]) sphere(r=ball_rad+slop);
-                    translate([-10,0,ball_rad+wall]) rotate([90,0,0]) sphere(r=ball_rad*2);
+                    translate([-15,0,ball_rad*2]) rotate([90,0,0]) sphere(r=ball_rad*2);
                 }
             }
         }
