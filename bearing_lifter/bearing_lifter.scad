@@ -234,7 +234,7 @@ module bearing(bearing=true, drive_gear=false){
     T=ball_rad*2+wall/2;
     // clearance
     tol=.3;
-    number_of_planets=5;
+    number_of_planets=7;
     number_of_teeth_on_planets=11;
     approximate_number_of_teeth_on_sun=21;
     ring_outer_teeth = 71;
@@ -309,7 +309,12 @@ module bearing(bearing=true, drive_gear=false){
         //planets
         for(i=[1:m])rotate([0,0,i*360/m+phi])translate([pitchD/2*(ns+np)/nr,0,0])
             rotate([0,0,i*ns/m*360/np-phi*(ns+np)/np-phi]){
-                herringbone(np,pitch,P,DR,tol,helix_angle,T);
+                difference(){
+                    herringbone(np,pitch,P,DR,tol,helix_angle,T);
+                    
+                    //slot to free the gears
+                    cube([5,15,100], center=true);
+                }
             }
         }
 }
