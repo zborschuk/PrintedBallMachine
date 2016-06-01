@@ -10,8 +10,9 @@ hole_rad = 8;
 lift_rad = in*3;
 num_balls = 17;
 
-dflat=.85;
-shaft=7+slop/2;
+dflat=.9;
+shaft=7+slop/4;
+bump=1.5;
 
 //%pegboard([10,10]);
 //%gear_mockup();
@@ -22,7 +23,7 @@ union(){
 mirror([1,0,0]) translate([-in*2.5,0,-in*2.5]) 
 bearing_inlet();
     
-bearing(bearing=false, drive_gear=true);
+!bearing(bearing=false, drive_gear=true);
 }
 mirror([1,0,0]) bearing_outlet();
 
@@ -58,10 +59,10 @@ module bearing_inlet(){
     translate([0,0,in])
     difference(){
     union(){
-            translate([-in,0,0]) inlet(height=1, length=2, hanger_height=3);
+            translate([-in,0,0]) inlet(height=1, length=2, width=3, hanger_height=3);
             
             //inlet ramp
-            translate([peg_sep,0,0]) track(rise=-.25*in, run=4*in, solid=1, end_angle=90);
+            translate([peg_sep,0,0]) track(rise=-.25*in, run=4*in, solid=1, end_angle=90, end_scale=[1.33,1,1]);
             
             //bearing mount
             translate([in*4.5,0,in*3]) rotate([90,0,0]){
@@ -129,12 +130,15 @@ module bearing_outlet(){
             
             //prevents the balls from rolling out prematurely
             
-            translate([in*4.5,0,in*3]) hull(){
-                for(i=[1:8]){
+            translate([in*4.5,0,in*3]) {
+                for(i=[1:8]) hull() {
                     rotate([0,35-i*support_step,0]) translate([lift_rad-in*3/16,0,0]) rotate([90,0,0]) cylinder(r1=1+(i)/4, r2=2+(i)/2, h=in);
                     rotate([0,35-(i+1)*support_step,0]) translate([lift_rad-in*3/16,0,0]) rotate([90,0,0]) cylinder(r1=1+(i+1)/4, r2=2+(i+1)/2, h=in);
                 }
-                rotate([0,35-(0+1)*support_step,0]) translate([lift_rad-in*3/16,0,0]) rotate([90,0,0]) cylinder(r1=1+(0+1)/4, r2=2+(0+1)/2, h=in*.8);
+                hull(){
+                    rotate([0,35-1*support_step,0]) translate([lift_rad-in*3/16,0,0]) rotate([90,0,0]) cylinder(r1=1+(1)/4, r2=2+(1)/2, h=in);
+                    rotate([0,35-(0)*support_step,0]) translate([lift_rad-in*3/16,0,0]) rotate([90,0,0]) cylinder(r1=1+(0+1)/4, r2=2+(0+1)/2, h=in*.8);
+                }
             }
 
 				//motor mounting lugs
@@ -271,6 +275,8 @@ module bearing(bearing=true, drive_gear=false){
                 union(){
                     //%cylinder(r=18, h=40);
                     herringbone(11,pitch,P,DR,tol,helix_angle,T);
+                    //little bump on top
+                    translate([0,0,bump/2]) cylinder(r=shaft, h=T+bump, center=true);
                 }
             
                 //d shaft
@@ -291,7 +297,7 @@ module bearing(bearing=true, drive_gear=false){
             for(i=[0:360/num_balls:359]) rotate([0,0,i]) translate([lift_rad,0,0]) hull(){
                 translate([0,0,-wall/2]) sphere(r=ball_rad+wall/2);
                 //translate([0,0,-T/2-.1]) cylinder(r=ball_rad, h=5);
-                translate([-in/4,0,ball_rad+wall/2]) sphere(r=ball_rad+wall/2);
+                translate([-in/4,0,ball_rad+wall/2]) scale([1,1.1,1]) sphere(r=ball_rad+wall/2);
             }
         }
         
@@ -313,7 +319,7 @@ module bearing(bearing=true, drive_gear=false){
                     herringbone(np,pitch,P,DR,tol,helix_angle,T);
                     
                     //slot to free the gears
-                    cube([5,15,100], center=true);
+                    cube([4,14,100], center=true);
                 }
             }
         }

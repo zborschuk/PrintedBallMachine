@@ -144,6 +144,7 @@ module inlet(height = 1, width = 2, length = 1, hanger_height=1, lift=5, outlet=
     
     side_supports = length-1;
     
+    inlet_y = inlet_y/2*width;
     inlet_x = inlet_x*length;
     
     lift_angle = atan(lift/inlet_x);
@@ -155,7 +156,7 @@ module inlet(height = 1, width = 2, length = 1, hanger_height=1, lift=5, outlet=
     difference(){
         union() {
             hull(){
-                cube([inlet_x,inlet_y,.1]);
+                #cube([inlet_x,inlet_y,.1]);
                 translate([0,0,inlet_z-drop_top]) rotate([0,-lift_angle,0]) cube([inlet_x+inset,inlet_y,.1]);
                 //%translate([0,0,inlet_z-.1]) cube([inlet_x,inlet_y,.1]);
             }
