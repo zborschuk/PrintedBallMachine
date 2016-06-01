@@ -25,7 +25,7 @@ reverse_module();
 
 intersection(){
     rotate([-90,0,0]) inlet(length=4, outlet=NONE);
-    rotate([-90,0,0]) translate([in*4,0,0]) mirror([i,0,0]) inlet(length=4, outlet=NONE);
+    rotate([-90,0,0]) translate([in*4,0,0]) mirror([1,0,0]) inlet(length=4, outlet=NONE);
 }
 
 
@@ -160,7 +160,7 @@ module inlet(height = 1, width = 3, length = 1, hanger_height=1, lift=5, outlet=
     difference(){
         union() {
             hull(){
-                #cube([inlet_x,inlet_y,.1]);
+                cube([inlet_x,inlet_y,.1]);
                 translate([0,0,inlet_z-drop_top]) rotate([0,-lift_angle,0]) cube([inlet_x+inset,inlet_y,.1]);
                 translate([inlet_x,inlet_y-wall,inlet_z+lift]) cube([wall,wall,.1]);
                 //%translate([0,0,inlet_z-.1]) cube([inlet_x,inlet_y,.1]);
@@ -406,4 +406,52 @@ module track(rise=-in, run=in*5, z_out=0, solid=1, track_angle=120, start=0, end
         
         translate([0,-peg_sep*.5,0]) track_hollow(angle, length+extra-end_subtract, ta, z_angle=z_angle);
     }
+}
+
+/********** Just a couple useful functions **********/
+module d_slot(shaft=6, height=10, tolerance = .2, dflat=.25, $fn=30){
+    translate([0,0,-.1]){
+       difference(){ 
+           cylinder(r1=shaft/2+tolerance, r2=shaft/2+tolerance/2, h=height+.01);
+           translate([-shaft/2,shaft/2-dflat,0]) cube([shaft, shaft, height+.01]);
+           translate([-shaft/2,-shaft/2-shaft+dflat,0]) cube([shaft, shaft, height+.01]);
+       }
+    }
+}
+
+module motorHoles(solid=1, motor_bump=3, support=false){
+    %translate([0,37/2-12,-20.8/2]) cube([22.3,37,20.8], center=true);
+    %translate([0,37-12,-20.8/2]) rotate([-90,0,0]) cylinder(r=22/2, h=28);
+    
+    if(solid==1) translate([0,0,0]) {
+        //mounting holes
+            mirror([0,0,1]) translate([0,0,(20.8)*1]) {
+                for(i=[0,1]) mirror([i,0,0]) translate([17.5/2,20,0]) {
+                    //cylinder(r=3.3/2+wall, h=motor_bump);
+                    translate([0,0,0]) cylinder(r1=3.1, r2=3.1+wall, h=motor_bump+.1);
+                    translate([0,0,motor_bump]) cylinder(r=3.1+wall, h=wall/2);
+                }
+                if(support == true){
+                    translate([0,0,0]) cylinder(r1=3.1, r2=3.1+wall, h=motor_bump+.1);
+                    translate([0,0,motor_bump]) cylinder(r=3.1+wall, h=wall/2);
+                }
+            }
+    }
+    
+    if(solid==0){
+        translate([0,0,-1]){
+            //center hole is overwritten by the sprocket hole, but it's good to have
+            //cylinder(r=5.2, h=30);
+       
+            //bump - straight up
+            //translate([0,12,0]) cylinder(r=2.6, h=3.1);
+       
+            //mounting holes
+            for(j=[0,1]) mirror([0,0,1]) translate([0,0,(20.8-2)*1]) for(i=[0,1]) mirror([i,0,0]) translate([17.5/2,20,0]) {
+                cylinder(r=3.3/2, h=30);
+                translate([0,0,2.6]) cylinder(r1=3.3/2, r2=3.1, h=1.5);
+                translate([0,0,wall+1]) cylinder(r=3.1, h=20);
+            }
+       }
+   }       
 }

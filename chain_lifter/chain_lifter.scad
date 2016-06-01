@@ -27,6 +27,8 @@ face = in-shaft*2-1;
 //%cube([200,200,1],center=true);
 
 
+clearance_rad = 55;
+
 //drive gear mockup
 %translate([length/2,0,-in+shaft+1+.5-.05]) rotate([90,0,0]) cylinder(r=face, h=in, center=true, $fn=6);
 
@@ -34,7 +36,7 @@ face = in-shaft*2-1;
 %translate([length/2,0,-in+shaft+1+.5-.05]) rotate([90,0,0]) cylinder(r=32, h=2, center=true);
 
 //clearance for the arms - ball loading angle
-%translate([length/2,0,-in+shaft+1+.5-.05]) rotate([90,0,0]) cylinder(r=53, h=2, center=true);
+%translate([length/2,0,-in+shaft+1+.5-.05]) rotate([90,0,0]) cylinder(r=clearance_rad, h=2, center=true);
 
 
 angle=60;
@@ -47,10 +49,81 @@ translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,an
 translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) link(ball_grabber=false);
 
 //yay
-inlet();
+cl_inlet();
 
-module inlet(){
+drive_gear();
+
+module drive_gear(){
+    translate([0,clearance_rad+wall,0]) difference(){
+        union(){
+            cylinder(r=face, h=in, center=true, $fn=6);
+        
+            //clearance for the balls
+            %cylinder(r=32, h=2, center=true);
+
+            //clearance for the arms - ball loading
+            %cylinder(r=clearance_rad, h=1, center=true);
+            
+            //extra bump for the motor
+            translate([0,0,motor_bump/2]) cylinder(r=motor_shaft, h=in+motor_bump, center=true);
+        }
+        
+        //d shaft
+        translate([0,0,-30]) d_slot(shaft=motor_shaft, height=60, dflat=motor_dflat);
+    }
+}
+
+module guide_moon(){
+    hull(){
+        translate([inlet_width/2*in, wall*2.5, in*1.5]) cylinder(r=clearance_rad, h=in, center=true);
+        translate([inlet_width/2*in, wall*2.5, in*1.5]) cylinder(r=clearance_rad+wall*2, h=.1, center=true);
+    }
+}
+
+module cl_inlet(){
+    inlet_width = 6;
+    %translate([inlet_width/2*in,0,in*1.5]) drive_gear();
     
+    
+    difference(){
+        union(){
+            intersection(){
+                rotate([-90,0,0]) inlet(length=inlet_width, outlet=NONE, hanger_height=3);
+                rotate([-90,0,0]) translate([inlet_width*in,0,0]) mirror([1,0,0]) inlet(length=inlet_width, outlet=NONE, hanger_height=3);
+            }
+            
+            //flat floor - will cut into it later, to slope the marbles in.
+            cube([inlet_width*in,wall*4,in*3]);
+            
+            //guide moon, and blocker
+            intersection(){
+                guide_moon(inlet_width=inlet_width);
+                cube([inlet_width*in,in*2,in*3]);
+            }
+            
+            //motor mount
+            translate([inlet_width/2*in,clearance_rad+wall,in]) hull() motorHoles(1, support=true);
+        }
+        
+        //bed hollow
+        translate([inlet_width/2*in, clearance_rad+wall, in*1.5]) hull(){
+            cylinder(r=clearance_rad, h=in+.1, center=true);
+            cylinder(r=clearance_rad+wall/2, h=.1, center=true);
+        }
+        
+        //motor mount
+        translate([inlet_width/2*in,clearance_rad+wall,in]) motorHoles(0);
+        
+        //bed slope
+        difference(){
+            hull(){
+                translate([inlet_width/2*in, clearance_rad+wall, in*1.5]) cylinder(r=clearance_rad, h=in, center=true);
+                translate([wall,wall*4,wall]) cube([inlet_width*in-wall*2,.1,in*3-wall*2]);
+            }
+            //guide moon, and blocker
+            guide_moon(inlet_width=inlet_width);
+        }
+    }
 }
 
 module link(ball_grabber=true){
@@ -118,13 +191,6 @@ module link(ball_grabber=true){
         //flatten the bottom
         translate([0,0,-25-thickness/2]) cube([50,50,50], center=true);
     }
-}
-
-//should let balls come in both sides
-module inlet(){
-}
-
-module outlet(){
 }
 
 //next section

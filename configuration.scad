@@ -32,3 +32,8 @@ PEG_NONE = 0;
 pin_tolerance = .25;
 pin_rad = 4;
 pin_lt = 1;
+
+//motor shaft variables
+motor_dflat=.9;
+motor_shaft=7+slop/4;
+motor_bump=1.5;

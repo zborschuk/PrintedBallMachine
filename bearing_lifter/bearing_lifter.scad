@@ -10,10 +10,6 @@ hole_rad = 8;
 lift_rad = in*3;
 num_balls = 17;
 
-dflat=.9;
-shaft=7+slop/4;
-bump=1.5;
-
 //%pegboard([10,10]);
 //%gear_mockup();
 
@@ -199,37 +195,6 @@ module bearing_outlet(){
     }
 }
 
-module motorHoles(solid=1, motor_bump=3){
-    %translate([0,37/2-12,-20.8/2]) cube([22.3,37,20.8], center=true);
-    %translate([0,37-12,-20.8/2]) rotate([-90,0,0]) cylinder(r=22/2, h=28);
-    
-    if(solid==1) translate([0,0,0]) {
-        //mounting holes
-            mirror([0,0,1]) translate([0,0,(20.8)*1]) for(i=[0,1]) mirror([i,0,0]) translate([17.5/2,20,0]) {
-                //cylinder(r=3.3/2+wall, h=motor_bump);
-                translate([0,0,0]) cylinder(r1=3.1, r2=3.1+wall, h=motor_bump+.1);
-                translate([0,0,motor_bump]) cylinder(r=3.1+wall, h=wall/2);
-            }
-    }
-    
-    if(solid==0){
-        translate([0,0,-1]){
-            //center hole is overwritten by the sprocket hole, but it's good to have
-            //cylinder(r=5.2, h=30);
-       
-            //bump - straight up
-            //translate([0,12,0]) cylinder(r=2.6, h=3.1);
-       
-            //mounting holes
-            for(j=[0,1]) mirror([0,0,1]) translate([0,0,(20.8-2)*1]) for(i=[0,1]) mirror([i,0,0]) translate([17.5/2,20,0]) {
-                cylinder(r=3.3/2, h=30);
-                translate([0,0,2.6]) cylinder(r1=3.3/2, r2=3.1, h=1.5);
-                translate([0,0,wall+1]) cylinder(r=3.1, h=20);
-            }
-       }
-   }       
-}
-
 module bearing(bearing=true, drive_gear=false){
     //set variables
     // bearing diameter of ring
@@ -276,11 +241,11 @@ module bearing(bearing=true, drive_gear=false){
                     //%cylinder(r=18, h=40);
                     herringbone(11,pitch,P,DR,tol,helix_angle,T);
                     //little bump on top
-                    translate([0,0,bump/2]) cylinder(r=shaft, h=T+bump, center=true);
+                    translate([0,0,motor_bump/2]) cylinder(r=motor_shaft, h=T+motor_bump, center=true);
                 }
             
                 //d shaft
-                translate([0,0,-30]) d_slot(shaft=shaft, height=60, dflat=dflat);
+                translate([0,0,-30]) d_slot(shaft=motor_shaft, height=60, dflat=motor_dflat);
             }
         }
     
@@ -323,16 +288,6 @@ module bearing(bearing=true, drive_gear=false){
                 }
             }
         }
-}
-
-module d_slot(shaft=6, height=10, tolerance = .2, dflat=.25, $fn=30){
-    translate([0,0,-.1]){
-       difference(){ 
-           cylinder(r1=shaft/2+tolerance, r2=shaft/2+tolerance/2, h=height+.01);
-           translate([-shaft/2,shaft/2-dflat,0]) cube([shaft, shaft, height+.01]);
-           translate([-shaft/2,-shaft/2-shaft+dflat,0]) cube([shaft, shaft, height+.01]);
-       }
-    }
 }
 
 //next section
