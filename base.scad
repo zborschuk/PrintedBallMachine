@@ -7,7 +7,7 @@ use <pins.scad>
 //rotate([-90,0,0])
 translate([in*10,0,-in*4]) 
 mirror([1,0,0])
-slope_module();
+offset_slope_module(offset=2);
 translate([in*5,0,-in*1]) 
 slope_module();
 
@@ -62,14 +62,17 @@ module slope_module(size = [4, -.5]){
 }
 
 //A sample module which uses the inlet to roll balls down a chute.
-module offset_slope_module(size = [4, -.5]){
+module offset_slope_module(size = [4, -.5], offset=1){
     inset = wall;
+    z_out = offset*in*2;
+    
+    
     difference(){
         union(){
             inlet(height=3);
             
             translate([in-inset,0,in*2])  difference(){
-                track(rise=(size[1]*1.1)*in, run=(size[0]*1.1)*in, z_out=track_rad*2+wall*3, solid=1, end_angle=0);
+                track(rise=(size[1]*2)*in, run=(size[0]*2)*in, z_out=z_out, solid=1, end_angle=0);
                 //flatten the front
                 translate([-25+inset,-25,0]) cube([50,50,50], center=true);
             }
@@ -84,7 +87,7 @@ module offset_slope_module(size = [4, -.5]){
         }
         
         translate([in-inset,0,in*2]) difference(){
-            track(rise=(size[1]*1.1)*in, run=(size[0]*1.1)*in, z_out=track_rad*2+wall*3, solid=-1, end_angle=0);
+            track(rise=(size[1]*2)*in, run=(size[0]*2)*in, z_out=z_out, solid=-1, end_angle=0);
             //flatten the front
             translate([0,-25,track_rad+wall]) cube([50,50,50], center=true);
         }
@@ -139,13 +142,14 @@ module reverse_module(size = [4, -.5]){
  * 
  * hanger_height: Given in units of pegboard, how tall your hanger should be.  Set to 0 for no hanger.
  */
-module inlet(height = 1, width = 2, length = 1, hanger_height=1, lift=5, outlet=INLET_HOLE, inset = inlet_x-ball_rad*2-wall*2){
+module inlet(height = 1, width = 3, length = 1, hanger_height=1, lift=5, outlet=INLET_HOLE, inset = inlet_x-ball_rad*2-wall*2){
     //slope = .25*in;
     
     side_supports = length-1;
     
     inlet_y = inlet_y/2*width;
     inlet_x = inlet_x*length;
+    inlet_y = inlet_y/2*width;
     
     lift_angle = atan(lift/inlet_x);
     drop_top = 4.6;
@@ -158,6 +162,7 @@ module inlet(height = 1, width = 2, length = 1, hanger_height=1, lift=5, outlet=
             hull(){
                 #cube([inlet_x,inlet_y,.1]);
                 translate([0,0,inlet_z-drop_top]) rotate([0,-lift_angle,0]) cube([inlet_x+inset,inlet_y,.1]);
+                translate([inlet_x,inlet_y-wall,inlet_z+lift]) cube([wall,wall,.1]);
                 //%translate([0,0,inlet_z-.1]) cube([inlet_x,inlet_y,.1]);
             }
             for(i=[0:length-1]){
@@ -184,7 +189,7 @@ module inlet(height = 1, width = 2, length = 1, hanger_height=1, lift=5, outlet=
                     //translate([wall,wall,wall]) cube([inlet_x-wall*2-inset,inlet_y-wall*2,inlet_z]);
                 }
                 translate([wall,wall,wall*2.5]) cube([inlet_x-wall*2,inlet_y-wall*2,.1]);
-                translate([0,wall,inlet_z-drop_top+.1]) rotate([0,-lift_angle,0])  translate([wall,0,0]) cube([inlet_x+inset-wall*2,inlet_y-wall*2,.1]);
+                translate([0,wall,inlet_z+lift+.1]) rotate([0,-lift_angle,0])  translate([wall,0,0]) cube([inlet_x+inset-wall*2,inlet_y-wall*2,.1]);
             }
             
             //wall supports
@@ -212,7 +217,7 @@ module inlet(height = 1, width = 2, length = 1, hanger_height=1, lift=5, outlet=
         
         //scalloped entry
         for(i=[0:in:inlet_y-1]){
-            translate([-in/2,inlet_y-i,inlet_z-in/2]) track(rise=-1.5, run=17, solid=-1, track_rad=track_rad+.25);
+            translate([-in/2,inlet_y-i,inlet_z-in/2-.35]) track(rise=-1.5, run=17, solid=-1, track_rad=track_rad+.35);
             
         }
     }
