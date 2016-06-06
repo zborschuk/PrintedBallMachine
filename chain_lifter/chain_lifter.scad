@@ -84,13 +84,21 @@ module cl_inlet(){
     inlet_width = 6;
     %translate([inlet_width/2*in,0,in*1.5]) drive_gear();
     
+    hanger_h = 3*in;
     
     difference(){
         union(){
+            //tray
             intersection(){
-                rotate([-90,0,0]) inlet(length=inlet_width, outlet=NONE, hanger_height=3);
-                rotate([-90,0,0]) translate([inlet_width*in,0,0]) mirror([1,0,0]) inlet(length=inlet_width, outlet=NONE, hanger_height=3);
+                rotate([-90,0,0]) inlet(length=inlet_width, outlet=NONE, hanger_height=0, hanger_vert=true);
+                rotate([-90,0,0]) translate([inlet_width*in,0,0]) mirror([1,0,0]) inlet(length=inlet_width, outlet=NONE, hanger_height=0);
             }
+            
+            //hangers
+                #translate([in,hanger_h,-in+inlet_z]) rotate([-90,0,0]) difference(){
+                    hanger(solid=1, hole=[1,1+hanger_height], drop =hanger_h);
+                    hanger(solid=-1, hole=[1,1+hanger_height], drop =hanger_h);
+                }
             
             //flat floor - will cut into it later, to slope the marbles in.
             cube([inlet_width*in,wall*4,in*3]);
@@ -102,7 +110,10 @@ module cl_inlet(){
             }
             
             //motor mount
-            translate([inlet_width/2*in,clearance_rad+wall,in]) hull() motorHoles(1, support=true);
+            translate([inlet_width/2*in,clearance_rad+wall,in]) hull(){
+                motorHoles(1, support=true);
+                translate([0,-clearance_rad+wall,-in]) cylinder(r=wall, h=wall*2);
+            }
         }
         
         //bed hollow
