@@ -7,7 +7,8 @@ length = in;
 hook_width = wall;
 core = width-wall-wall-1;
 shaft=3;
-thickness = wall-1;
+thickness = wall;
+groove_rad = 2;
 
 jut = 11;
 
@@ -39,24 +40,47 @@ clearance_rad = 55;
 //%translate([length/2,0,-in+shaft+1+.5-.05]) rotate([90,0,0]) cylinder(r=clearance_rad, h=2, center=true);
 
 
-angle=60;
+//render everything
+part=10;
 
-link(ball_grabber=true);
-translate([length,0,0]) rotate([0,angle,0]) link(ball_grabber=false);
-translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) link(ball_grabber=true);
-translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) link(ball_grabber=false);
-translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) link(ball_grabber=true);
-translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) link(ball_grabber=false);
+//parts for laser cutting
+if(part == 0)
+    link(ball_grabber=true);
+if(part == 1)
+    link(ball_grabber=false);
+if(part == 2)
+    drive_gear();
+if(part == 3)
+    cl_inlet();
+if(part == 4)
+    cl_outlet();
 
-//yay
-cl_inlet();
-
-drive_gear();
+angle = 60;
+if(part==10){
+    
+    //do a full loop of links
+    link(ball_grabber=true);
+    translate([length,0,0]) rotate([0,angle,0]) link(ball_grabber=false);
+    translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) link(ball_grabber=true);
+    translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) link(ball_grabber=false);
+    translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) link(ball_grabber=true);
+    translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) link(ball_grabber=false);
+    
+    //todo: place these correctly
+    cl_inlet();
+    drive_gear();
+    cl_outlet();
+}
 
 module drive_gear(){
     translate([0,clearance_rad+wall,0]) difference(){
         union(){
             cylinder(r=face, h=in, center=true, $fn=6);
+            
+            //alignment groove
+            hull() for(i=[0:60:359]) rotate([0,0,i]) {
+                translate([0,face*cos(180/6),0]) rotate([0,90,0]) cylinder(r=groove_rad-slop/2, h=face-thickness, center=true, $fn=6);
+            }
         
             //clearance for the balls
             %cylinder(r=32, h=2, center=true);
@@ -66,6 +90,8 @@ module drive_gear(){
             
             //extra bump for the motor
             translate([0,0,motor_bump/2]) cylinder(r=motor_shaft, h=in+motor_bump, center=true);
+            
+            
         }
         
         //d shaft
@@ -96,8 +122,8 @@ module cl_inlet(){
             
             //hangers
                 #translate([in,hanger_h,-in+inlet_z]) rotate([-90,0,0]) difference(){
-                    hanger(solid=1, hole=[1,1+hanger_height], drop =hanger_h);
-                    hanger(solid=-1, hole=[1,1+hanger_height], drop =hanger_h);
+                    hanger(solid=1, hole=[1,1+hanger_h], drop =hanger_h);
+                    hanger(solid=-1, hole=[1,1+hanger_h], drop =hanger_h);
                 }
             
             //flat floor - will cut into it later, to slope the marbles in.
@@ -175,7 +201,7 @@ module link(ball_grabber=true){
                 
                 //room for the next link, and opening
                 hull(){
-                    #translate([0,0,shaft])
+                    translate([0,0,shaft])
                     rotate([90,0,0]) cylinder(r=shaft+slop, h=width+1, center=true);
                     translate([-shaft*4,0,shaft*3]) rotate([90,0,0]) cylinder(r=shaft*3, h=width+1, center=true);
                 }
@@ -198,10 +224,17 @@ module link(ball_grabber=true){
                     }
                 }
             }
+            
+            //alignment groove beefinator
+            *translate([0,0,-thickness/2]) rotate([0,90,0]) rotate([0,0,30])           
+               cylinder(r=groove_rad+thickness, h=core, center=true, $fn=6);
         }
         
         //flatten the bottom
         translate([0,0,-25-thickness/2]) cube([50,50,50], center=true);
+        
+        //alignment groove
+        translate([0,0,-thickness/2]) rotate([0,90,0]) rotate([0,0,30]) cylinder(r=groove_rad+slop/2, h=100, center=true, $fn=6);
     }
 }
 
