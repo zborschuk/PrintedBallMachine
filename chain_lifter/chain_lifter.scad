@@ -6,7 +6,7 @@ width = in-1;
 length = in;
 hook_width = wall;
 core = width-wall-wall-1;
-shaft=2;
+shaft=3;
 thickness = wall-1;
 
 jut = 11;
@@ -30,13 +30,13 @@ face = in-shaft*2-1;
 clearance_rad = 55;
 
 //drive gear mockup
-%translate([length/2,0,-in+shaft+1+.5-.05]) rotate([90,0,0]) cylinder(r=face, h=in, center=true, $fn=6);
+%translate([length/2,0,-in+shaft]) rotate([90,0,0]) cylinder(r=face, h=in, center=true, $fn=6);
 
 //clearance for the balls
-%translate([length/2,0,-in+shaft+1+.5-.05]) rotate([90,0,0]) cylinder(r=32, h=2, center=true);
+//%translate([length/2,0,-in+shaft+1+.5-.05]) rotate([90,0,0]) cylinder(r=32, h=2, center=true);
 
 //clearance for the arms - ball loading angle
-%translate([length/2,0,-in+shaft+1+.5-.05]) rotate([90,0,0]) cylinder(r=clearance_rad, h=2, center=true);
+//%translate([length/2,0,-in+shaft+1+.5-.05]) rotate([90,0,0]) cylinder(r=clearance_rad, h=2, center=true);
 
 
 angle=60;
@@ -140,7 +140,7 @@ module cl_inlet(){
 module link(ball_grabber=true){
     core_shorten = shaft*3;
     
-    translate([length/2,0,thickness/2-shaft*2]) 
+    translate([length/2,0,-(shaft+thickness/2)]) 
     difference(){
         union(){
             translate([0,0,0]) cube([length-core_shorten,core,thickness], center=true);
@@ -150,7 +150,7 @@ module link(ball_grabber=true){
             }
             
             //hook interface rod
-            translate([-length/2,0,thickness+shaft/2]) rotate([90,0,0]) difference(){
+            translate([-length/2,0,shaft+thickness/2]) rotate([90,0,0]) difference(){
                 union(){
                     cylinder(r=shaft, h=width, center=true);
                     hull(){
@@ -175,7 +175,8 @@ module link(ball_grabber=true){
                 
                 //room for the next link, and opening
                 hull(){
-                    translate([0,0,shaft+slop]) rotate([90,0,0]) cylinder(r=shaft+slop, h=width+1, center=true);
+                    #translate([0,0,shaft])
+                    rotate([90,0,0]) cylinder(r=shaft+slop, h=width+1, center=true);
                     translate([-shaft*4,0,shaft*3]) rotate([90,0,0]) cylinder(r=shaft*3, h=width+1, center=true);
                 }
             }
