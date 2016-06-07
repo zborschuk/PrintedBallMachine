@@ -10,38 +10,20 @@ shaft=3;
 thickness = wall;
 groove_rad = 2;
 
+idler_shaft=6;
+
 jut = 11;
 
 
 $fn=60;
-    
-//ball grabber
-
 
 stab_rad=4; //radius of stabilizer triangle
-
 
 //this is the face of the driving gear - it should be related to the length a bit better.
 face = in-shaft*2-1;
 
-//%pegboard([10,10]);
-//%cube([200,200,1],center=true);
-
-
-clearance_rad = 55;
-
-//drive gear mockup
-%translate([length/2,0,-in+shaft]) rotate([90,0,0]) cylinder(r=face, h=in, center=true, $fn=6);
-
-//clearance for the balls
-//%translate([length/2,0,-in+shaft+1+.5-.05]) rotate([90,0,0]) cylinder(r=32, h=2, center=true);
-
-//clearance for the arms - ball loading angle
-//%translate([length/2,0,-in+shaft+1+.5-.05]) rotate([90,0,0]) cylinder(r=clearance_rad, h=2, center=true);
-
-
 //render everything
-part=10;
+part=6;
 
 //parts for laser cutting
 if(part == 0)
@@ -51,10 +33,18 @@ if(part == 1)
 if(part == 2)
     drive_gear();
 if(part == 3)
-    cl_inlet();
+    idler_gear();
 if(part == 4)
+    cl_inlet();
+if(part == 5)
     cl_outlet();
+if(part == 6){
+    link(ball_grabber=true);
+    translate([length,0,0]) link(ball_grabber=false);
+    translate([length,0,0]) translate([length,0,0]) rotate([0,angle,0]) link(ball_grabber=false);
+}
 
+clearance_rad = 55;
 angle = 60;
 if(part==10){
     
@@ -68,7 +58,10 @@ if(part==10){
     
     //todo: place these correctly
     cl_inlet();
-    drive_gear();
+    
+    //drive gear
+    translate([length/2,0,-in*3-thickness-.5]) rotate([90,0,0]) drive_gear();
+    
     cl_outlet();
 }
 
@@ -96,6 +89,28 @@ module drive_gear(){
         
         //d shaft
         translate([0,0,-30]) d_slot(shaft=motor_shaft, height=60, dflat=motor_dflat);
+    }
+}
+
+module idler_gear(){
+    translate([0,clearance_rad+wall,0]) difference(){
+        union(){
+            cylinder(r=face, h=in, center=true, $fn=6);
+            
+            //alignment groove
+            hull() for(i=[0:60:359]) rotate([0,0,i]) {
+                translate([0,face*cos(180/6),0]) rotate([0,90,0]) cylinder(r=groove_rad-slop/2, h=face-thickness, center=true, $fn=6);
+            }
+        
+            //clearance for the balls
+            %cylinder(r=32, h=2, center=true);
+
+            //clearance for the arms - ball loading
+            %cylinder(r=clearance_rad, h=1, center=true);
+        }
+        
+        //shaft
+        cylinder(r1=idler_shaft+1, r2=idler_shaft, h=50, center=true);
     }
 }
 
@@ -169,10 +184,11 @@ module link(ball_grabber=true){
     translate([length/2,0,-(shaft+thickness/2)]) 
     difference(){
         union(){
-            translate([0,0,0]) cube([length-core_shorten,core,thickness], center=true);
+            //straight bit
+            translate([-core_shorten/2+2,0,0]) cube([length-core_shorten-4,core,thickness], center=true);
             hull(){
-                translate([length/2-core_shorten*2,0,0]) cube([core_shorten*2,core,thickness], center=true);
-                translate([length/2-core_shorten,0,0]) cube([core_shorten,width,thickness], center=true);
+                #translate([-core_shorten+shaft*1.5+4,0,0]) cube([length-core_shorten-shaft*3,core,thickness], center=true);
+                #translate([length/2-core_shorten/2-3,0,0]) cube([core_shorten/2,width,thickness], center=true);
             }
             
             //hook interface rod
@@ -211,9 +227,13 @@ module link(ball_grabber=true){
             if(ball_grabber == true){
                 translate([-shaft*2-1,0,jut]) difference(){
                     %translate([0,0,ball_rad+thickness]) sphere(r=ball_rad);
-                    hull(){
-                        translate([0,0,ball_rad-jut]) rotate([90,0,0]) cylinder(r=ball_rad+wall, h=ball_rad+wall, center=true);
-                        translate([0,0,ball_rad+wall]) rotate([90,0,0]) cylinder(r=ball_rad+wall+jut/4, h=ball_rad+wall, center=true);
+                    intersection(){
+                        hull(){
+                            translate([0,0,ball_rad-jut]) rotate([90,0,0]) cylinder(r=ball_rad+wall, h=ball_rad+wall, center=true);
+                            translate([0,0,ball_rad+wall]) rotate([90,0,0]) cylinder(r=ball_rad+wall+jut/4, h=ball_rad+wall, center=true);
+                        }
+                        translate([shaft*2+1,0,-jut]) translate([length/2-core_shorten*1.5,0,0]) cube([core_shorten*3,core,thickness*50], center=true);
+                        
                     }
                 
                     //cutout
