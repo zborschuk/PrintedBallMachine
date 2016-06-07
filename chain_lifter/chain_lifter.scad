@@ -1,5 +1,6 @@
 include <../configuration.scad>;
 use <../base.scad>;
+use <easy_print_bearing.scad>;
 
 //chain variables
 width = in-1;
@@ -10,7 +11,7 @@ shaft=3;
 thickness = wall;
 groove_rad = 2;
 
-idler_shaft=6;
+idler_shaft=5;
 
 jut = 11;
 
@@ -23,7 +24,7 @@ stab_rad=4; //radius of stabilizer triangle
 face = in-shaft*2-1;
 
 //render everything
-part=6;
+part=5;
 
 //parts for laser cutting
 if(part == 0)
@@ -47,14 +48,7 @@ if(part == 6){
 clearance_rad = 55;
 angle = 60;
 if(part==10){
-    
-    //do a full loop of links
-    link(ball_grabber=true);
-    translate([length,0,0]) rotate([0,angle,0]) link(ball_grabber=false);
-    translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) link(ball_grabber=true);
-    translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) link(ball_grabber=false);
-    translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) link(ball_grabber=true);
-    translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) link(ball_grabber=false);
+    link_loop();
     
     //todo: place these correctly
     cl_inlet();
@@ -63,6 +57,16 @@ if(part==10){
     translate([length/2,0,-in*3-thickness-.5]) rotate([90,0,0]) drive_gear();
     
     cl_outlet();
+}
+
+module link_loop(){
+    //do a full loop of links
+    link(ball_grabber=true);
+    translate([length,0,0]) rotate([0,angle,0]) link(ball_grabber=false);
+    translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) link(ball_grabber=true);
+    translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) link(ball_grabber=false);
+    translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) link(ball_grabber=true);
+    translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) translate([length,0,0]) rotate([0,angle,0]) link(ball_grabber=false);
 }
 
 module drive_gear(){
@@ -93,14 +97,33 @@ module drive_gear(){
 }
 
 module idler_gear(){
+    outer_rad = face*cos(180/6)-1.25;
+    inner_rad = idler_shaft-1;
+    height = in/2;
+    num_rollers = 8;
     translate([0,clearance_rad+wall,0]) difference(){
         union(){
-            cylinder(r=face, h=in, center=true, $fn=6);
-            
-            //alignment groove
-            hull() for(i=[0:60:359]) rotate([0,0,i]) {
-                translate([0,face*cos(180/6),0]) rotate([0,90,0]) cylinder(r=groove_rad-slop/2, h=face-thickness, center=true, $fn=6);
+            difference(){
+                union(){
+                    cylinder(r=face, h=height, center=true, $fn=6);
+                    case(width=height,out_rad1=outer_rad,out_rad2=outer_rad,in_rad=inner_rad);
+                    
+                    //alignment groove
+                    hull() for(i=[0:60:359]) rotate([0,0,i]) {
+                        translate([0,face*cos(180/6),0]) rotate([0,90,0]) cylinder(r=groove_rad-slop/2, h=face-thickness, center=true, $fn=6);
+                        }
+                }
+                
+                //the bearing race
+                ring(width=height,out_rad1=outer_rad,out_rad2=outer_rad,in_rad=inner_rad);
             }
+            
+            //bearing rollers
+            for(n=[1:num_rollers]){
+               rotate([0,0,(n*(360/num_rollers))]) roller(width=height,out_rad1=outer_rad,out_rad2=outer_rad,in_rad=inner_rad);
+            }
+            
+            
         
             //clearance for the balls
             %cylinder(r=32, h=2, center=true);
@@ -110,7 +133,7 @@ module idler_gear(){
         }
         
         //shaft
-        cylinder(r1=idler_shaft+1, r2=idler_shaft, h=50, center=true);
+        cylinder(r1=idler_shaft+1, r2=idler_shaft+1, h=in+1, center=true, $fn=6);
     }
 }
 
@@ -174,6 +197,25 @@ module cl_inlet(){
             }
             //guide moon, and blocker
             guide_moon(inlet_width=inlet_width);
+        }
+    }
+}
+
+module cl_outlet(){
+    %rotate([90,0,0]) idler_gear();
+    %translate([0,0,in*3.3]) rotate([0,30,0]) link_loop();
+    
+    difference(){
+        union(){
+            //ball grabbing wings - slide inbetween the ball hook and the link hooks.
+            
+            //slide - to get the marbles out.  Should just be a straight shot, with the ball wings attached.
+            
+            //idler gear mount - and put the idler gear on it properly
+            
+            //hooks - hold up the thingamajig
+            
+            //main body - make sure all the bits hold together
         }
     }
 }

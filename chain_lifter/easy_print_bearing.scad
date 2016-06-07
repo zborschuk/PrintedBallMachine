@@ -54,7 +54,7 @@ module roller()
 //CONSTRUCTION
 difference()
 {
-	//case();
+	case();
 	ring();
 }
 
