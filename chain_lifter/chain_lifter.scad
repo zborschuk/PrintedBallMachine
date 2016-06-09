@@ -1,6 +1,7 @@
 include <../configuration.scad>;
 use <../base.scad>;
 use <easy_print_bearing.scad>;
+use <bearing.scad>;
 
 //chain variables
 width = in-1;
@@ -24,7 +25,7 @@ stab_rad=4; //radius of stabilizer triangle
 face = in-shaft*2-1;
 
 //render everything
-part=5;
+part=3;
 
 //parts for laser cutting
 if(part == 0)
@@ -34,7 +35,7 @@ if(part == 1)
 if(part == 2)
     drive_gear();
 if(part == 3)
-    idler_gear();
+    idler_gear2();
 if(part == 4)
     cl_inlet();
 if(part == 5)
@@ -94,6 +95,10 @@ module drive_gear(){
         //d shaft
         translate([0,0,-30]) d_slot(shaft=motor_shaft, height=60, dflat=motor_dflat);
     }
+}
+
+module idler_gear2(){
+    bearing();
 }
 
 module idler_gear(){
@@ -298,6 +303,90 @@ module link(ball_grabber=true){
         //alignment groove
         translate([0,0,-thickness/2]) rotate([0,90,0]) rotate([0,0,30]) cylinder(r=groove_rad+slop/2, h=100, center=true, $fn=6);
     }
+}
+
+module bearing(bearing=true, drive_gear=false){
+    //set variables
+    // bearing diameter of ring
+    D=33;
+    // thickness
+    T=in/2;
+    // clearance
+    tol=.3;
+    number_of_planets=7;
+    number_of_teeth_on_planets=10;
+    approximate_number_of_teeth_on_sun=14;
+    ring_outer_teeth = 71;
+    // pressure angle
+    P=45;//[30:60]
+    // number of teeth to twist across
+    nTwist=1;
+    // width of hexagonal hole
+    w=idler_shaft*2;
+    hole_rad = idler_shaft;
+
+    DR=0.5*1;// maximum depth ratio of teeth
+    
+    //derived variables
+    m=round(number_of_planets);
+    np=round(number_of_teeth_on_planets);
+    ns1=approximate_number_of_teeth_on_sun;
+    k1=round(2/m*(ns1+np));
+    k= k1*m%2!=0 ? k1+1 : k1;
+    ns=k*m/2-np; //actual number of teeth on the sun
+    echo(ns);
+    nr=ns+2*np; //number of teeth on the inside of the ring gear
+    pitchD=0.9*D/(1+min(PI/(2*nr*tan(P)),PI*DR/nr));
+    pitch=pitchD*PI/nr;
+    //echo(pitch);
+    helix_angle=atan(2*nTwist*pitch/T);
+    //echo(helix_angle);
+    phi=$t*360/m;
+    
+    if(bearing==true)
+    translate([0,0,T/2]){
+        //ring gear
+        difference(){
+            union(){
+                cylinder(r=face, h=T, center=true, $fn=6);
+            
+                //alignment groove
+                hull() for(i=[0:60:359]) rotate([0,0,i]) {
+                    translate([0,face*cos(180/6),0]) rotate([0,90,0]) cylinder(r=groove_rad-slop/2, h=face-thickness, center=true, $fn=6);
+                }
+        
+                //clearance for the balls
+                %cylinder(r=32, h=2, center=true);
+
+                //clearance for the arms - ball loading
+                %cylinder(r=clearance_rad, h=1, center=true);
+            }
+            
+            //inner ring
+            herringbone(nr,pitch,P,DR,-tol,helix_angle,T+0.2);
+        }
+
+        
+        //sun gear
+        rotate([0,0,(np+1)*180/ns+phi*(ns+np)*2/ns])
+        difference(){
+            mirror([0,1,0])
+                herringbone(ns,pitch,P,DR,tol,helix_angle,T);
+            //cylinder(r=w/sqrt(3),h=T+1,center=true,$fn=6);
+            translate([0,0,-T/2-.1]) cylinder(r1=hole_rad, r2=hole_rad-slop*2, h = in+1, $fn=6);
+        }
+        
+        //planets
+        for(i=[1:m])rotate([0,0,i*360/m+phi])translate([pitchD/2*(ns+np)/nr,0,0])
+            rotate([0,0,i*ns/m*360/np-phi*(ns+np)/np-phi]){
+                difference(){
+                    herringbone(np,pitch,P,DR,tol,helix_angle,T);
+                    
+                    //slot to free the gears
+                    cube([1.5,3,100], center=true);
+                }
+            }
+        }
 }
 
 //next section
