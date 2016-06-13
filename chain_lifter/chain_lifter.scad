@@ -12,7 +12,7 @@ shaft=3;
 thickness = wall;
 groove_rad = 2;
 
-idler_shaft=5;
+idler_shaft=4;
 
 jut = 11;
 
@@ -312,10 +312,10 @@ module bearing(bearing=true, drive_gear=false){
     // thickness
     T=in/2;
     // clearance
-    tol=.3;
-    number_of_planets=7;
-    number_of_teeth_on_planets=10;
-    approximate_number_of_teeth_on_sun=14;
+    tol=.125;
+    number_of_planets=5;
+    number_of_teeth_on_planets=6;
+    approximate_number_of_teeth_on_sun=9;
     ring_outer_teeth = 71;
     // pressure angle
     P=45;//[30:60]
@@ -383,7 +383,7 @@ module bearing(bearing=true, drive_gear=false){
                     herringbone(np,pitch,P,DR,tol,helix_angle,T);
                     
                     //slot to free the gears
-                    cube([1.5,3,100], center=true);
+                    cube([1,3,100], center=true);
                 }
             }
         }
