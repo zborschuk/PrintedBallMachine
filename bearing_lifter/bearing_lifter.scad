@@ -1,6 +1,7 @@
 include <../configuration.scad>;
 use <../base.scad>;
 use <bearing.scad>;
+use <../screw_drop/screw_drop.scad>;
 
 peg_sep = 25.4;
 
@@ -10,30 +11,35 @@ hole_rad = 8;
 lift_rad = in*3;
 num_balls = 17;
 
-//%pegboard([10,10]);
-//%gear_mockup();
+!assembled();
 
-//have to print all three parts, and mount them as shown.
-union(){
-    rotate([-90,0,0])
-mirror([1,0,0]) translate([-in*2.5,0,-in*2.5]) 
-bearing_inlet();
+//assembled unit.  1 == inlet left, 1 = outlet right
+module assembled(inlet = 1, outlet = 1){
+    %pegboard([12,12]);
     
-!bearing(bearing=false, drive_gear=true);
+    if(inlet==1)
+        bearing_inlet();
+    else{
+        mirror([1,0,0])
+        bearing_inlet();
+    }
+    
+    *translate([in*4.5,-in*1-1-ball_rad*2-wall,in*4]) rotate([90,0,0]) mirror([0,0,1]) rotate([0,0,30]) bearing();
+    
+    translate([in/2, -in, in*3+6]) rotate([90,0,0])  rotate([0,0,90]) translate([0,0,1+ball_rad*2+wall/2+2]) rotate([0,0,8]) rotate([180,0,0]) bearing(bearing=false, drive_gear=true);
+    
+    bearing_outlet();
+    
+    //drop the ball
+    translate([in*8,0,in*4]) screw_drop();
+    
+    //return path
+    *translate([in*9,0,in*0]) mirror([1,0,0]) slope_module(size = [3,-.5]);
+    *translate([in*9,0,in*2]) mirror([0,0,0]) reverse_module(size = [3, -1.5]);
+    
+    //ongoing path
+    translate([in*8,0,in*0]) mirror([0,0,0]) slope_module(size = [3,-.5]);
 }
-mirror([1,0,0]) bearing_outlet();
-
-//!rotate([-90,0,0])
-union(){
-    //bearing_outlet();
-    translate([in*4.5,-in*1-1-ball_rad*2-wall,in*4]) rotate([90,0,0]) mirror([0,0,1])
-    !bearing();
-
-    translate([in*4.5+in*5.25,-in*1-1-ball_rad*2-wall,in*8.75]) rotate([-90,0,0]) mirror([0,0,0])
-    bearing();
-}
-
-%cube([200,200,1],center=true);
 
 
 //this is a mockup so I could size it quickly :-)
@@ -55,7 +61,7 @@ module bearing_inlet(){
     translate([0,0,in])
     difference(){
     union(){
-            translate([-in,0,0]) inlet(height=1, length=2, width=3, hanger_height=3);
+            translate([0,0,0]) inlet(height=1, length=1, width=3, hanger_height=3);
             
             //inlet ramp
             translate([peg_sep,0,0]) track(rise=-.25*in, run=4*in, solid=1, end_angle=90, end_scale=[1.33,1,1]);
@@ -71,14 +77,14 @@ module bearing_inlet(){
            translate([in/2, -in, in*2+6]) rotate([90,0,0])  rotate([0,0,90]){
             
               %translate([0,0,1+ball_rad*2+wall/2+2]) rotate([0,0,8]) rotate([180,0,0]) bearing(bearing=false, drive_gear=true);
-              translate([0,0,-.1]) hull() rotate([0,0,-90]) motorHoles(1);
+              translate([0,0,-.1]) hull() rotate([0,0,-90]) motorHoles(1, slot=5);
            }
                   
             hanger(solid=1, hole=[5,4], drop=in*3.4, rot=5);
             hanger(solid=1, hole=[4,4], drop=in*3.5, rot =-15);
             hanger(solid=1, hole=[6,4], drop=in*3.7, rot = 25);
            
-            hanger(solid=1, hole=[0,4], drop=in*3.5, rot =-20);
+            //hanger(solid=1, hole=[0,4], drop=in*3.5, rot =-20);
             hanger(solid=1, hole=[2,4], drop=in*3.5, rot = 20);
             
         }
@@ -89,7 +95,7 @@ module bearing_inlet(){
             
                         //new motor mount - right angled beastie
            translate([in/2, -in, in*2+6]) rotate([90,0,0])  rotate([0,0,90]){
-              rotate([0,0,-90]) motorHoles(0);
+              rotate([0,0,-90]) motorHoles(0, slot=5);
            }
         
         hanger(solid=-1, hole=[5,4], drop=in*6.5);
@@ -121,77 +127,32 @@ module bearing_outlet(){
     difference(){
         union(){
             //outlet ramp
-            translate([in*8,0,in*4.5])
-            translate([peg_sep,0,0]) mirror([i,0,0]) track(rise=.75*in-2, run=5*in, solid=1, end_angle=90, end_scale=[1.33,1,1]);
+            translate([in*8,0,in*4.5]) mirror([i,0,0]) track(rise=.75*in-2, run=4*in, solid=1, end_angle=90, end_scale=[1.33,1,1]);
             
-            //prevents the balls from rolling out prematurely
+            //hangers
+            hanger(solid=1, hole=[5,7], drop=in, rot=-30);
+            hanger(solid=1, hole=[8,7], drop=in*1.5, rot=-10);
             
+            //this prevents the balls from rolling out prematurely
             translate([in*4.5,0,in*3]) {
-                for(i=[1:8]) hull() {
+                for(i=[2:8]) hull() {
                     rotate([0,35-i*support_step,0]) translate([lift_rad-in*3/16,0,0]) rotate([90,0,0]) cylinder(r1=1+(i)/4, r2=2+(i)/2, h=in);
                     rotate([0,35-(i+1)*support_step,0]) translate([lift_rad-in*3/16,0,0]) rotate([90,0,0]) cylinder(r1=1+(i+1)/4, r2=2+(i+1)/2, h=in);
                 }
                 hull(){
-                    rotate([0,35-1*support_step,0]) translate([lift_rad-in*3/16,0,0]) rotate([90,0,0]) cylinder(r1=1+(1)/4, r2=2+(1)/2, h=in);
-                    rotate([0,35-(0)*support_step,0]) translate([lift_rad-in*3/16,0,0]) rotate([90,0,0]) cylinder(r1=1+(0+1)/4, r2=2+(0+1)/2, h=in*.8);
+                    rotate([0,35-2*support_step,0]) translate([lift_rad-in*3/16,0,0]) rotate([90,0,0]) cylinder(r1=1+(1)/4, r2=2+(1)/2, h=in);
+                    rotate([0,35-(1)*support_step,0]) translate([lift_rad-in*3/16,0,0]) rotate([90,0,0]) cylinder(r1=1+(0+1)/4, r2=2+(0+1)/2, h=in*.8);
                 }
             }
-
-				//motor mounting lugs
-				*translate([in*7, 0, in*6.5]) rotate([90,0,0]){
-					difference(){
-						union(){
-							translate([-motor_mount_rad,0,0]) cylinder(r1=in/2, r2=m3_rad+wall, h=in-wall);
-
-							//the right mount is curvy
-							for(i=[-15:5:15]) translate([-motor_mount_rad,0,0]) rotate([0,0,i]) translate([motor_mount_rad*2,0,0]) hull(){
-								cylinder(r1=in/2, r2=m3_rad+wall, h=in-wall);
-							}
-						}
-						translate([-motor_mount_rad,0,in/2]) cylinder(r=m3_rad, h=in+wall);
-						translate([-motor_mount_rad,0,-.2]) cylinder(r=m3_rad, h=in/2);
-						translate([-motor_mount_rad,0,in/2-3.2]) cylinder(r=7/2, h=3, $fn=6);
-						
-						//the right mount is curvy
-						for(i=[-15:1:15]) translate([-motor_mount_rad,0,-.1]) rotate([0,0,i]) translate([motor_mount_rad*2,0,0]) {
-							translate([0,0,in/2]) cylinder(r=m3_rad, h=in+wall);
-							translate([0,0,-.2]) cylinder(r=m3_rad, h=in/2);
-							translate([0,0,in/2-3.2]) cylinder(r=7/2, h=3, $fn=6);
-						}
-						
-						//motor clearance
-						*translate([-motor_mount_rad,0,0]) rotate_extrude(){
-							translate([motor_mount_rad,0,-.1]) square([motor_rad*2, in*2], center=true);
-						}
-
-						//motor clearance
-						for(i=[-30:15:90]) translate([-motor_mount_rad,0,-.1]) rotate([0,0,i]) translate([motor_mount_rad,0,0]) hull(){
-							cylinder(r=motor_rad, h=in*2);
-							//translate([50,0,0]) cylinder(r=motor_rad, h=in*2);
-						}
-					}
-        		}
-                
-            //new motor mount - right angled beastie
-           *translate([in*6.5, -in+2-motor_bump, in*6.8+2.5]) rotate([90,0,0])  rotate([0,0,0]){
-            
-              %translate([0,0,1]) rotate([0,0,7]) bearing(bearing=false, drive_gear=true);
-              hull() rotate([0,0,-90]) motorHoles(1);
-           }
-
-            //hull(){
-                hanger(solid=1, hole=[6,7], drop=in);
-                hanger(solid=1, hole=[8,7], drop=in*1.5, rot=-30);
-            //}
         }
         
         *translate([in*6.5, -in+2-motor_bump, in*6.8+2.5]) rotate([90,0,0])  rotate([0,0,0]){
             //bearing(bearing=false, drive_gear=true);
-            rotate([0,0,-90]) motorHoles(0);
+            rotate([0,0,-90]) motorHoles(0, slot=2);
         }
         
-        hanger(solid=-1, hole=[6,7], drop=in);
-        hanger(solid=-1, hole=[8,7], drop=in*1.5, rot=-30);
+        hanger(solid=-1, hole=[5,7], drop=in, rot=-30);
+        hanger(solid=-1, hole=[8,7], drop=in*1.5, rot=-10);
     }
 }
 
@@ -239,7 +200,7 @@ module bearing(bearing=true, drive_gear=false){
             translate([0,0,T/2]) difference(){
                 union(){
                     //%cylinder(r=18, h=40);
-                    herringbone(11,pitch,P,DR,tol,helix_angle,T);
+                    herringbone(9,pitch,P,DR,tol,helix_angle,T);
                     //little bump on top
                     translate([0,0,motor_bump/2]) cylinder(r=motor_shaft, h=T+motor_bump, center=true);
                 }

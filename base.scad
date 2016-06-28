@@ -49,7 +49,7 @@ module slope_module(size = [4, -.5]){
             inlet(height=3);
             
             translate([in,0,in*2]) track(rise=(size[1]*1.1)*in, run=(size[0]*1.1)*in, solid=1, end_angle=0);
-            hanger(solid=1, hole=[5,3], drop = in/2);
+            hanger(solid=1, hole=[floor(size[0])+1,3], drop = in/2);
         }
         //hole in the inlet
         *translate([in,0,in*2]) track(rise=size[1], run=size[0], solid=-1, hanger=0, extra_len=in-wall*1.5);
@@ -57,7 +57,7 @@ module slope_module(size = [4, -.5]){
 		  //cut the end flat
 		  translate([50+in*size[0]+in-1,0,in*2]) cube([100,100,100], center=true);
         
-         hanger(solid=-1, hole=[5,3], drop = in/2);
+         hanger(solid=-1, hole=[floor(size[0])+1,3], drop = in/2);
     }
 }
 
@@ -76,7 +76,7 @@ module offset_slope_module(size = [4, -.5], offset=1){
                 //flatten the front
                 translate([-25+inset,-25,0]) cube([50,50,50], center=true);
             }
-            hanger(solid=1, hole=[5,3], drop = in*.75);
+            hanger(solid=1, hole=[floor(size[0])+1,3], drop = in*.75);
             
             //lower end support
             hull(){
@@ -95,7 +95,7 @@ module offset_slope_module(size = [4, -.5], offset=1){
 		 //cut the end flat
 		 translate([50+in*size[0]+in-1,0,in*2]) cube([100,200,200], center=true);
         
-         hanger(solid=-1, hole=[5,3], drop = in*.75);
+         hanger(solid=-1, hole=[floor(size[0])+1,3], drop = in*.75);
     }
 }
 
@@ -105,17 +105,19 @@ module reverse_module(size = [4, -.5]){
         union(){
             inlet(height=3, hanger_height=1);
             
-            translate([in,0,in*2]) track(rise=(size[1]*1)*in, run=(size[0]*1)*in, solid=1, end_angle=90);
-            difference(){
-                translate([-.25*in,-in*2,in*.5]) mirror([0,1,0]) track(rise=(size[1]*-1+.5)*in, run=(size[0]+1.25)*in, solid=1, end_angle=90);
-                //gotta cut the end flat
-                translate([-49,0,in*2]) cube([100,200,100], center=true);
+            translate([0,0,in*2]){
+                translate([in,0,0]) track(rise=(size[1]*.5)*in, run=(size[0]*1)*in, solid=1, end_angle=90);
+                difference(){
+                    translate([-.25*in,-in*2,size[1]*in]) mirror([0,1,0]) track(rise=(size[1]*-.5)*in, run=(size[0]+1.25)*in, solid=1, end_angle=90);
+                    //gotta cut the end flat
+                    translate([-49,0,in*2]) cube([100,200,100], center=true);
+                }
             }
             
             //support
             translate([peg_sep/2,-peg_sep,peg_sep*1.5]) cube([peg_sep-2,wall/2,peg_sep], center=true);
             
-            hanger(solid=1, hole=[4,4], drop = in*1.33);
+            hanger(solid=1, hole=[size[0],4], drop = in*1.33);
         }
         //hole in the inlet
         //translate([in,0,in*2]) track(rise=size[1], run=size[0], solid=-1, hanger=0, extra_len=in-wall*1.5);
@@ -123,7 +125,7 @@ module reverse_module(size = [4, -.5]){
 		  //cut the end flat
 		  translate([50+in*size[0]+in,0,in*2]) cube([100,100,100], center=true);
         
-        hanger(solid=-1, hole=[4,4], drop = in*1.33);
+        hanger(solid=-1, hole=[size[0],4], drop = in*1.33);
     }
 }
 
@@ -419,7 +421,7 @@ module d_slot(shaft=6, height=10, tolerance = .2, dflat=.25, $fn=30){
     }
 }
 
-module motorHoles(solid=1, motor_bump=3, support=false){
+module motorHoles(solid=1, motor_bump=3, support=false, slot=0){
     %translate([0,37/2-12,-20.8/2]) cube([22.3,37,20.8], center=true);
     %translate([0,37-12,-20.8/2]) rotate([-90,0,0]) cylinder(r=22/2, h=28);
     
@@ -428,8 +430,10 @@ module motorHoles(solid=1, motor_bump=3, support=false){
             mirror([0,0,1]) translate([0,0,(20.8)*1]) {
                 for(i=[0,1]) mirror([i,0,0]) translate([17.5/2,20,0]) {
                     //cylinder(r=3.3/2+wall, h=motor_bump);
-                    translate([0,0,0]) cylinder(r1=3.1, r2=3.1+wall, h=motor_bump+.1);
-                    translate([0,0,motor_bump]) cylinder(r=3.1+wall, h=wall/2);
+                    hull() for(j=[-slot/2, slot/2]) translate([j,0,0]) {
+                        cylinder(r1=3.1, r2=3.1+wall, h=motor_bump+.1);
+                        translate([0,0,motor_bump]) cylinder(r=3.1+wall, h=wall/2);
+                    }
                 }
                 if(support == true){
                     translate([0,0,0]) cylinder(r1=3.1, r2=3.1+wall, h=motor_bump+.1);
@@ -445,12 +449,18 @@ module motorHoles(solid=1, motor_bump=3, support=false){
        
             //bump - straight up
             //translate([0,12,0]) cylinder(r=2.6, h=3.1);
+            
+            *hull() for(j=[-slot/2, slot/2]) translate([j,0,0]) {
+                cylinder(r1=3.1, r2=3.1+wall, h=motor_bump+.1);
+                translate([0,0,motor_bump]) cylinder(r=3.1+wall, h=wall/2);
+                }
        
             //mounting holes
             for(j=[0,1]) mirror([0,0,1]) translate([0,0,(20.8-2)*1]) for(i=[0,1]) mirror([i,0,0]) translate([17.5/2,20,0]) {
-                cylinder(r=3.3/2, h=30);
-                translate([0,0,2.6]) cylinder(r1=3.3/2, r2=3.1, h=1.5);
-                translate([0,0,wall+1]) cylinder(r=3.1, h=20);
+                
+                hull() for(s=[-slot/2, slot/2]) translate([s,0,0]) cylinder(r=3.3/2, h=30);
+                translate([0,0,2.6]) hull() for(s=[-slot/2, slot/2]) translate([s,0,0]) cylinder(r1=3.3/2, r2=3.1, h=1.5);
+                translate([0,0,wall+1]) hull() for(s=[-slot/2, slot/2]) translate([s,0,0]) cylinder(r=3.1, h=20);
             }
        }
    }       

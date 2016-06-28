@@ -3,18 +3,24 @@ in = 25.4;
 hole_rad = 6.5/2;
 hole_sep = 25.4;
 
+%cube([in,in,in], center=true);
+
+%cube([in*1.5,in*1.5,in/2], center=true);
+
 
 handle();
 
 module handle(){
-    min_rad = 4;
+    min_rad = in/8;
+    
+    thick = in/2 - min_rad*2;
     
     difference(){
         minkowski(){
             difference(){
                 hull(){
-                    cube([5.5*in, 3*in, .5*in], center=true);
-                    translate([0,-.5*in,0]) cube([.125*in, 3*in, .5*in], center=true);
+                    cube([5.5*in, 3*in, thick], center=true);
+                    translate([0,-.5*in,0]) cube([.125*in, 3*in, thick], center=true);
                 }
                 
                 //hanging holes
@@ -31,7 +37,7 @@ module handle(){
             sphere(r=min_rad, $fn=8);
         }
         
-        #translate([0,1.25*in-2,1*in-.35*in]) cube([6*in, 1*in, 1*in], center=true);
+        translate([0,1.25*in-2,1/2*in]) cube([6*in, 1*in, 1*in], center=true);
         
         //pegboard holes
         for(i=[0:hole_sep:500]) translate([5.5*in-i,1.125*in,0]) cylinder(r=hole_rad, h=200, center=true);

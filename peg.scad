@@ -5,13 +5,23 @@ use <base.scad>
 //peg for printing
 translate([0,peg_thick,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90]) peg(peg=PEG_HOOK);
 
+//double length peg - good for supporting bigger modules
+translate([0,peg_thick-30,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90]) peg(peg=PEG_HOOK, peg_units=2);
+
+//triple length peg - good for supporting bigger modules
+translate([0,peg_thick-60,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90]) peg(peg=PEG_HOOK, peg_units=3);
+
 //peg that catches marbles
-!translate([-50,peg_thick,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90]) 
+translate([-50,peg_thick,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90]) 
 ball_return_peg();
+
+//stand for a 12x12 board
+!translate([0,peg_thick+80,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90])
+peg_stand();
 
 //added the option to make the peg have a locking pin, instead of a hook.
 //todo: add an option for a long pin with a screwhole in it
-module peg(peg=PEG_HOOK){
+module peg(peg=PEG_HOOK, peg_units=1, lower_peg_thick = peg_thick){
     $fn=16;
     
     extra_inset = 2;
@@ -46,17 +56,17 @@ module peg(peg=PEG_HOOK){
             //connect 'em
             hull(){
                 rotate([90,0,0]) cylinder(r=peg_rad, h=wall);
-                translate([0,0,-peg_sep*1.5]) rotate([90,0,0]) cylinder(r=peg_rad, h=wall);
+                translate([0,0,-peg_sep*.5-peg_sep*peg_units]) rotate([90,0,0]) cylinder(r=peg_rad, h=wall);
             }
             
             //lower peg
-            translate([0,0,-peg_sep]) rotate([90,0,0]) translate([0,0,-peg_thick]) cylinder(r2=peg_rad, r1=peg_rad-slop, h=peg_thick+wall);
-            translate([0,peg_thick,-peg_sep]) sphere(r=peg_rad-slop);
+            translate([0,0,-peg_sep*peg_units]) rotate([90,0,0]) translate([0,0,-lower_peg_thick]) cylinder(r2=peg_rad, r1=peg_rad-slop, h=lower_peg_thick+wall);
+            translate([0,lower_peg_thick,-peg_sep*peg_units]) sphere(r=peg_rad-slop);
         }
         
         //cut off top and bottom for easier printing
-        translate([50+peg_rad-cutoff,0,0]) cube([100,100,100], center=true);
-        translate([-50-peg_rad+cutoff,0,0]) cube([100,100,100], center=true);
+        translate([100+peg_rad-cutoff,0,0]) cube([200,200,200], center=true);
+        translate([-100-peg_rad+cutoff,0,0]) cube([200,200,200], center=true);
     }
 }
 
@@ -135,5 +145,58 @@ module ball_return_peg(){
                 for(i=[0:3]) translate([0,separation*i,0]) rotate([0,90,0]) cylinder(r=dowel_rad,    h=wall*3, center=true);
             }
         }
+    }
+}
+
+module peg_stand(peg_units = 1, thick = in/3, height=3, base_length = in*3){
+    cutoff=1;
+    
+    brace_height = peg_sep*3/4;
+    
+    translate([peg_sep/2,0,peg_sep*1.5]) 
+    difference(){
+        union(){
+            translate([-peg_sep/2,0,-peg_sep*1.5]) peg(peg=NONE, peg_units=peg_units, lower_peg_thick=-wall);
+            
+            //stiffen the spine
+            hull(){
+                translate([0,0,peg_rad-thick/2]) 
+                rotate([90,0,0]) cylinder(r=thick/2, h=wall);
+                translate([0,0,-peg_sep*height]) rotate([90,0,0]) cylinder(r=thick/2, h=wall);
+            }
+            
+            //front brace
+            translate([0,wall+in/4,0]) hull(){
+                translate([0,0,peg_rad-thick/2-in]) 
+                rotate([90,0,0]) cylinder(r=thick/2, h=wall);
+                translate([0,0,-peg_sep*height]) rotate([90,0,0]) cylinder(r=thick/2, h=wall);
+            }
+            
+            //peg in the front brace
+            translate([0,0,-peg_sep]) rotate([90,0,0]) translate([0,0,-wall-in/4]) cylinder(r1=peg_rad, r2=peg_rad-slop, h=peg_thick-.5);
+            translate([0,wall+in/4-peg_thick+.5,-peg_sep]) sphere(r=peg_rad-slop);
+            
+            //base
+            translate([0,(wall+in/4)/2-wall/2,0])
+            for(i=[0:1]) mirror([0,i,0]) translate([0,0,-peg_sep*height]) difference(){
+                union(){
+                    rotate([90,0,0]) cube([thick, thick, peg_sep], center=true);
+                    hull(){ //bottom
+                        translate([0,-base_length/2,0]) 
+                        rotate([90,0,0]) translate([-thick/2,-thick/2,0])cube([thick, thick, wall]);
+                        translate([0,-(wall+in/4)/2,0]) rotate([90,0,0]) translate([-thick/2,-thick/2,0]) cube([thick, thick, wall]);
+                        translate([0,-(wall+in/4)/2,brace_height]) rotate([90,0,0]) translate([-thick/2,-thick/2,0]) cube([thick, thick, wall]);
+                    }
+                }
+                translate([0,-base_length/2-wall,brace_height+thick/2]) scale([1,(base_length-wall*2)/in,(2*brace_height)/in]) rotate([0,90,0]) cylinder(r=in/2, h=20, center=true);
+            }
+        }
+        
+        
+        //cut off side for easier printing
+        translate([-100-peg_rad+cutoff,0,0]) cube([200,200,200], center=true);
+        
+        //cut off bottom so it can standor easier printing
+        translate([-100-peg_rad+cutoff,0,0]) cube([200,200,200], center=true);
     }
 }

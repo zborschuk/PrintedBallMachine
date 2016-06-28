@@ -1,5 +1,7 @@
 in = 25.4;
 
+$fn=30;
+
 slop = .2;
 
 //pegboard variables
