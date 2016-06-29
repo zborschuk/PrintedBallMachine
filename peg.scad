@@ -2,22 +2,44 @@ include<configuration.scad>
 use <pins.scad>
 use <base.scad>
 
-//peg for printing
-translate([0,peg_thick,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90]) peg(peg=PEG_HOOK);
+part = 5;
 
-//double length peg - good for supporting bigger modules
-translate([0,peg_thick-30,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90]) peg(peg=PEG_HOOK, peg_units=2);
+//laid out for printing
+if(part == 0)   //peg
+    translate([0,0,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90]) peg(peg=PEG_HOOK);
+if(part == 1)   //double length peg - good for supporting bigger modules
+    translate([0,0,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90]) peg(peg=PEG_HOOK, peg_units=2);
+if(part == 2)   //triple length peg - good for supporting bigger modules
+    translate([0,0,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90]) peg(peg=PEG_HOOK, peg_units=3);
+if(part == 3)   //peg that catches marbles
+    translate([0,0,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90]) 
+        ball_return_peg();
+if(part == 4)   //stand for a 12x12 board
+    translate([0,0,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90])
+        peg_stand();
 
-//triple length peg - good for supporting bigger modules
-translate([0,peg_thick-60,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90]) peg(peg=PEG_HOOK, peg_units=3);
+if(part == 5)   //stand for a 12x12 board
+    translate([0,0,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90])
+        peg_stand(height=4, front_drop=2);
 
-//peg that catches marbles
-translate([-50,peg_thick,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90]) 
-ball_return_peg();
+if(part == 10){
+    //peg for printing
+    translate([0,peg_thick,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90]) peg(peg=PEG_HOOK);
 
-//stand for a 12x12 board
-!translate([0,peg_thick+80,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90])
-peg_stand();
+    //double length peg - good for supporting bigger modules
+    translate([0,peg_thick-30,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90]) peg(peg=PEG_HOOK, peg_units=2);
+
+    //triple length peg - good for supporting bigger modules
+    translate([0,peg_thick-60,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90]) peg(peg=PEG_HOOK, peg_units=3);
+
+    //peg that catches marbles
+    translate([-50,peg_thick,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90]) 
+        ball_return_peg();
+
+    //stand for a 12x12 board
+    translate([0,peg_thick+80,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90])
+        peg_stand();
+}
 
 //added the option to make the peg have a locking pin, instead of a hook.
 //todo: add an option for a long pin with a screwhole in it
@@ -148,10 +170,11 @@ module ball_return_peg(){
     }
 }
 
-module peg_stand(peg_units = 1, thick = in/3, height=3, base_length = in*3){
+module peg_stand(peg_units = 1, thick = in*.6, height=3, front_drop=1, base_length = in*4){
     cutoff=1;
     
-    brace_height = peg_sep*3/4;
+    
+    brace_height = peg_sep*1.25;
     
     translate([peg_sep/2,0,peg_sep*1.5]) 
     difference(){
@@ -161,20 +184,22 @@ module peg_stand(peg_units = 1, thick = in/3, height=3, base_length = in*3){
             //stiffen the spine
             hull(){
                 translate([0,0,peg_rad-thick/2]) 
-                rotate([90,0,0]) cylinder(r=thick/2, h=wall);
-                translate([0,0,-peg_sep*height]) rotate([90,0,0]) cylinder(r=thick/2, h=wall);
+                rotate([90,0,0]) cylinder(r=thick/2, h=wall*2);
+                translate([0,0,-peg_sep*height]) rotate([90,0,0]) cylinder(r=thick/2, h=wall*4);
             }
             
             //front brace
             translate([0,wall+in/4,0]) hull(){
-                translate([0,0,peg_rad-thick/2-in]) 
+                translate([0,0,peg_rad-thick/2-peg_sep*front_drop]) 
                 rotate([90,0,0]) cylinder(r=thick/2, h=wall);
                 translate([0,0,-peg_sep*height]) rotate([90,0,0]) cylinder(r=thick/2, h=wall);
             }
             
             //peg in the front brace
-            translate([0,0,-peg_sep]) rotate([90,0,0]) translate([0,0,-wall-in/4]) cylinder(r1=peg_rad, r2=peg_rad-slop, h=peg_thick-.5);
-            translate([0,wall+in/4-peg_thick+.5,-peg_sep]) sphere(r=peg_rad-slop);
+            translate([0,0,-peg_sep*front_drop]){
+                rotate([90,0,0]) translate([0,0,-wall-in/4]) cylinder(r1=peg_rad, r2=peg_rad-slop, h=peg_thick-.333);
+                translate([0,wall+in/4-peg_thick+.333,0]) sphere(r=peg_rad-slop);
+            }
             
             //base
             translate([0,(wall+in/4)/2-wall/2,0])
@@ -188,7 +213,7 @@ module peg_stand(peg_units = 1, thick = in/3, height=3, base_length = in*3){
                         translate([0,-(wall+in/4)/2,brace_height]) rotate([90,0,0]) translate([-thick/2,-thick/2,0]) cube([thick, thick, wall]);
                     }
                 }
-                translate([0,-base_length/2-wall,brace_height+thick/2]) scale([1,(base_length-wall*2)/in,(2*brace_height)/in]) rotate([0,90,0]) cylinder(r=in/2, h=20, center=true);
+                translate([0,-base_length/2-wall,brace_height+thick/2]) scale([1,(base_length-wall*2)/in,(2*brace_height+thick)/in]) rotate([0,90,0]) cylinder(r=in/2, h=20, center=true, $fn=60);
             }
         }
         

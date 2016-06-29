@@ -13,6 +13,9 @@ num_balls = 17;
 
 part = 10;
 
+//next section
+%translate([in*12,0,-in*3]) inlet(height=5);
+
 //laid out for printing
 if(part == 0)
     bearing_inlet();
@@ -23,9 +26,11 @@ if(part == 2)
 if(part == 3)
     bearing_outlet();
 if(part == 4)
-    sphere(r=5);
+    screw_drop(inlet_length=2, exit=-1);
 if(part == 5)
-    sphere(r=5);
+    mirror([1,0,0]) slope_module(size = [4,-.5], height=2.5);
+if(part == 6)
+    slope_module(size = [2,-.5], inlet = REVERSE);
 
 
 if(part==10){
@@ -43,22 +48,22 @@ module assembled(inlet = 1, outlet = 1){
         bearing_inlet();
     }
     
-    translate([in*4.5,-in*1-1-ball_rad*2-wall,in*4]) rotate([90,0,0]) mirror([0,0,1]) rotate([0,0,30]) bearing();
+    *translate([in*4.5,-in*1-1-ball_rad*2-wall,in*4]) rotate([90,0,0]) mirror([0,0,1]) rotate([0,0,30]) bearing();
     
-    translate([in/2, -in, in*3+6]) rotate([90,0,0])  rotate([0,0,90]) translate([0,0,1+ball_rad*2+wall/2+2]) rotate([0,0,8]) rotate([180,0,0]) bearing(bearing=false, drive_gear=true);
+    *translate([in/2, -in, in*3+6]) rotate([90,0,0])  rotate([0,0,90]) translate([0,0,1+ball_rad*2+wall/2+2]) rotate([0,0,8]) rotate([180,0,0]) bearing(bearing=false, drive_gear=true);
     
     bearing_outlet();
     
     //drop the ball into the switch
-    translate([in*8,0,in*4]) screw_drop();
+    translate([in*8,0,in*4]) screw_drop(inlet_length=2, exit=-1);
     
     
     //these two need to be made into a single switch.
     //return path
-    translate([in*10,0,in*0]) mirror([1,0,0]) slope_module(size = [3,-.5]);
+    translate([in*10,0,in*0]) mirror([1,0,0]) slope_module(size = [4,-.5], height=2.5);
        
     //ongoing path
-    translate([in*9,0,in*0]) mirror([0,0,0]) slope_module(size = [2,-.5]);
+    translate([in*9,0,in*0]) mirror([0,0,0]) slope_module(size = [2,-.5], inlet = REVERSE);
 }
 
 
@@ -270,6 +275,3 @@ module bearing(bearing=true, drive_gear=false){
             }
         }
 }
-
-//next section
-%translate([in*9,0,in]) inlet(height=5);

@@ -14,29 +14,45 @@ screw_drop();
 translate([peg_sep*4,0,-peg_sep*4])  reverse_module();
 
 //inlet ramp
-module screw_drop(){
+module screw_drop(inlet_length=1, exit=-1){
     
     drop = 2.5*in/11;
     
     translate([0,0,in])
     difference(){
     union(){
-            inlet(height=1, length=2, hanger_height=1);
+            inlet(height=1, length=inlet_length, hanger_height=1);
             //inlet screw down
-            translate([peg_sep*2,0,0]) track(rise=-drop*2, run=2*in, solid=1, end_angle=90);
+            translate([peg_sep*inlet_length,0,0]){
+                track(rise=-drop*2, run=2*in, solid=1, end_angle=90);
             
-            translate([0,0,-drop]) spiral(drop=drop, turns=4);
-            translate([0,0,-drop*5]) spiral(drop=drop, turns=4);
-            //translate([0,0,-drop*9]) spiral(drop=drop);
+                translate([-peg_sep*2,0,-drop]) spiral(drop=drop, turns=4);
+                translate([-peg_sep*2,0,-drop*5]) spiral(drop=drop, turns=4);
+                //translate([0,0,-drop*9]) spiral(drop=drop);
             
-            //exit
-            difference(){
-                translate([peg_sep*3+.5,-peg_sep+1,-drop*10]) mirror([1,1,0]) track(rise=-drop, run=in, solid=1, end_angle=90);
-                translate([peg_sep*4+50-1,0,0]) cube([100,100,200], center=true);
+                //exit right
+                if(exit == 1){
+                    difference(){
+                        translate([peg_sep*1+.5,-peg_sep+1,-drop*10]) mirror([1,1,0]) track(rise=-drop, run=in, solid=1, end_angle=90);
+                        translate([peg_sep*4+50-1,0,0]) cube([100,100,200], center=true);
+                    }
+                }
+                
+                //exit left
+                if(exit == -1){
+                    difference(){
+                        translate([peg_sep*0+.5-10,-peg_sep+.1-peg_sep,-drop*12]) mirror([0,1,0]) track(rise=drop*2, run=in*2+10, solid=1, end_angle=90);
+                        translate([peg_sep*0-50+1,0,0]) cube([100,200,200], center=true);
+                    }
+                }
+                
+                //exit drop
+                if(exit == 0){
+                    
+                }
+            
+                hanger(solid=1, hole=[4,2], drop=in*3.1, rot=12);
             }
-            
-            hanger(solid=1, hole=[4,2], drop=in*3.1, rot=12);
-            
         }
         
         hanger(solid=-1, hole=[4,2], drop=in*3.1, rot=12);

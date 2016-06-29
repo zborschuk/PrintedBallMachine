@@ -13,7 +13,7 @@ slope_module();
 
 translate([in*5,0,-in*5]) 
 mirror([1,0,0])
-slope_module();
+back_slope_module();
 
 //this module angles to the other side, acts as a brake to slow down long runs.
 //rotate([-90,0,0])
@@ -43,10 +43,15 @@ module pegboard(size = [12,6]){
 }
 
 //A sample module which uses the inlet to roll balls down a chute.
-module slope_module(size = [4, -.5]){
+module slope_module(size = [4, -.5], width=3, inlet = NORMAL){
     difference(){
         union(){
-            inlet(height=3);
+            if(inlet == NORMAL){
+                inlet(height=3, width=width);
+            }
+            if(inlet == REVERSE){
+                translate([peg_sep,0,0]) mirror([1,0,0]) inlet(height=3, width=width, outlet = REVERSE);
+            }
             
             translate([in,0,in*2]) track(rise=(size[1]*1.1)*in, run=(size[0]*1.1)*in, solid=1, end_angle=0);
             hanger(solid=1, hole=[floor(size[0])+1,3], drop = in/2);
@@ -180,9 +185,16 @@ module inlet(height = 1, width = 3, length = 1, hanger_height=1, lift=5, outlet=
             hull(){
                 intersection(){
                     //ball divot
-                    hull(){
-                        translate([inlet_x,inlet_y-in/2,in/2]) translate([0,0,0]) sphere(r=in/2-wall);
-                        translate([-inlet_x,inlet_y-in/2,in/2+5*length]) translate([0,0,0]) sphere(r=ball_rad);
+                    if(outlet == REVERSE){
+                        hull(){
+                            translate([0,inlet_y-in/2,in/2]) translate([0,0,0]) sphere(r=in/2-wall);
+                            translate([-inlet_x,inlet_y-in/2,in/2+5*length]) translate([0,0,0]) sphere(r=ball_rad);
+                        }
+                    }else{
+                        hull(){
+                            translate([inlet_x,inlet_y-in/2,in/2]) translate([0,0,0]) sphere(r=in/2-wall);
+                            translate([-inlet_x,inlet_y-in/2,in/2+5*length]) translate([0,0,0]) sphere(r=ball_rad);
+                        }
                     }
                     hull(){
                         translate([wall,wall,0]) cube([inlet_x-wall*2,inlet_y-wall*2,.1]);
@@ -214,6 +226,13 @@ module inlet(height = 1, width = 3, length = 1, hanger_height=1, lift=5, outlet=
                     translate([inlet_x-in/2,inlet_y-in/2,in/2+5]) translate([0,0,0]) sphere(r=ball_rad);
                     translate([inlet_x,inlet_y-in/2-in,in/2]) translate([0,0,0]) sphere(r=in/2-wall);
                     translate([inlet_x-in/2,inlet_y-in/2-in,in/2+5]) translate([0,0,0]) sphere(r=ball_rad);
+                }
+            }
+            
+            if(outlet == REVERSE){
+                hull(){
+                    translate([0,inlet_y-in/2,in/2]) translate([0,0,0]) sphere(r=in/2-wall);
+                    translate([inlet_x-in/2,inlet_y-in/2,in/2]) translate([0,0,0]) sphere(r=ball_rad);
                 }
             }
         
