@@ -11,9 +11,8 @@ offset_slope_module(offset=2);
 translate([in*5,0,-in*1]) 
 slope_module();
 
-translate([in*5,0,-in*5]) 
-mirror([1,0,0])
-back_slope_module();
+!inlet_switch();
+
 
 //this module angles to the other side, acts as a brake to slow down long runs.
 //rotate([-90,0,0])
@@ -244,6 +243,117 @@ module inlet(height = 1, width = 3, length = 1, hanger_height=1, lift=5, outlet=
     }
 }
 
+//two kinds of switch - manual or flip flop.
+module switch(solid=1, type = SWITCH){
+    post_rad = 2;
+    translate([0,-post_rad*2-slop*2,0]){
+        if(solid == 1){
+            union(){
+                cylinder(r=post_rad, h=in);
+                translate([0,0,wall*2]) cylinder(r=post_rad*2, h=in-wall*3);
+                
+                if(type == SWITCH){
+                    hull(){
+                        translate([0,0,wall*2]) cylinder(r=post_rad*2, h=in-wall*3);
+                        translate([0,-in*sqrt(2),wall+in/2]) cylinder(r=post_rad, h=in/4, center=true);
+                    }
+                }
+                
+            }
+        }
+    
+        if(solid == -1){
+            cylinder(r=post_rad+slop, h=in*2.5, center=true);
+            translate([0,-post_rad*1.33,in]) cylinder(r=post_rad+slop*2, h=in/2, center=true);
+            
+            translate([0,0,wall*2]) cylinder(r=post_rad*2+slop*3, h=in-wall*3);
+        }
+    }
+}
+
+module switch_clip(){
+    post_rad = 2;
+    translate([0,0,in-wall/2]){
+        hull(){
+            translate([0,-post_rad,0]) scale([1,1.25,1]) cylinder(r=post_rad*2, h=wall*1.5);
+        }
+    }
+}
+
+module inlet_switch(height = 1, width = 3, inlet_length = 2, left_length = 3, right_length = 2, hanger_height=1, lift=5, outlet=INLET_HOLE, inset = inlet_x-ball_rad*2-wall*2){
+    
+    base_rise = 10;
+    
+    inlet_y = inlet_y/2*width;
+    inlet_x = inlet_x*inlet_length;
+    inlet_y = inlet_y/2*width;
+    
+    lift_angle = atan(lift/inlet_x);
+    drop_top = 4.6;
+    
+    %translate([in,-in/2,(height-.5)*in]) translate([0,0,0]) sphere(r=ball_rad);
+    %translate([-in,-in/2,(height-.5)*in]) translate([0,0,0]) sphere(r=ball_rad);
+    
+    difference(){
+        union(){
+            //the frame
+            intersection(){
+                translate([-in,0,0]) inlet(length = inlet_length);
+                translate([in,0,0]) mirror([1,0,0]) inlet(length = inlet_length);
+            }
+            
+            //new bottom
+            //slope the base inwards, to better hit the flipper
+            hull(){
+                translate([0,-wall,wall]) cube([in*2, .1, wall*2], center=true);
+                translate([0,-width*in+wall, (wall+base_rise)/2]) cube([in*2, .1, wall+base_rise], center=true);
+            }
+            
+            //switch
+            translate([0,-wall,0]){
+                %switch(solid = 1);
+                switch_clip();
+            }
+            
+            //Exits!  We put in a ramp going out each side.
+            //left:
+            translate([-in,0,0]) mirror([1,0,0]) track(rise=(-.5*1.1)*in, run=(left_length*1.1)*in, solid=1, end_angle=0);
+            //right
+            translate([in,0,0]) mirror([0,0,0]) track(rise=(-.5*1.1)*in, run=(right_length*1.1)*in, solid=1, end_angle=0);
+        }
+        
+        //Exits!  We put in a ramp going out each side.
+        //left:
+        translate([-50-in-left_length*in,0,0]) cube([100,100,100], center=true);
+        //right
+        translate([50+in+right_length*in,0,0]) cube([100,100,100], center=true);
+        
+        //ball path
+        for(i=[0,1]) mirror([i,0,0]) hull(){
+            translate([0,-peg_sep/2,in/2+wall]) translate([0,0,0]) sphere(r=in/2-wall*1.5);
+            translate([-in-wall*2,-peg_sep/2,track_rad+wall+.75]) translate([0,0,ball_rad-track_rad]) sphere(r=track_rad);
+        }
+        
+        //hole for the switch mount
+        translate([0,-wall,0]) switch(solid = -1);
+        
+        //core out the new bottom
+        translate([0,-wall,wall]) hull(){
+            translate([0,0,wall*3]) cube([in*2-wall*2, .1, wall*4], center=true);
+            translate([0,-width*in+wall*2, wall*2+base_rise]) cube([in*2-wall*2, .1, wall*4], center=true);
+            
+            //center the marbles a bit
+            //translate([0,-in/2+wall,(height-.5)*in-wall*1.5]) translate([0,0,0]) sphere(r=ball_rad);
+        }
+        
+        //remove some exess material
+        translate([0,-wall,-wall*5]) hull(){
+            translate([0,0,wall*2]) cube([in*2+wall, .1, wall*4], center=true);
+            translate([0,-width*in+wall, wall*2+base_rise]) cube([in*2+wall, .1, wall*6], center=true);
+        }
+    }
+}
+
 //used to hang everything :-)
 module hanger(solid=0, hole=[1,4], slot_size = 0, drop = in/2, rot = 0){
     offset = (track_rad+wall);
@@ -398,7 +508,7 @@ module track(rise=-in, run=in*5, z_out=0, solid=1, track_angle=120, start=0, end
     if(solid>=0){
         difference(){
             union(){
-                %translate([0,-peg_sep/2,0]) translate([0,0,ball_rad-track_rad]) sphere(r=ball_rad);
+                //%translate([0,-peg_sep/2,0]) translate([0,0,ball_rad-track_rad]) sphere(r=ball_rad);
                 translate([0,-peg_sep*.5,0]) track_trough(angle, length+extra-end_subtract, ta, z_angle=z_angle);
             
                 //#rotate([0,angle,0]) translate([length+extra,0,0]) translate([-peg_sep,-peg_sep, -peg_sep/2]) cube([peg_sep, peg_sep, peg_sep]);
