@@ -55,15 +55,16 @@ module assembled(inlet = 1, outlet = 1){
     bearing_outlet();
     
     //drop the ball into the switch
-    translate([in*8,0,in*4]) screw_drop(inlet_length=2, exit=-1);
+    translate([in*8,0,in*4]) screw_drop(inlet_length=1, exit=-1);
     
     
     //these two need to be made into a single switch.
     //return path
-    translate([in*10,0,in*0]) mirror([1,0,0]) slope_module(size = [4,-.5], height=2.5);
+    translate([in*9,0,in*0]) mirror([1,0,0]) slope_module(size = [3,-.5], height=0);
+    
        
     //ongoing path
-    translate([in*9,0,in*0]) mirror([0,0,0]) slope_module(size = [2,-.5], inlet = REVERSE);
+    translate([in*8,0,in*0]) mirror([0,0,0]) slope_module(size = [3,-.5], inlet = REVERSE);
 }
 
 
@@ -86,7 +87,7 @@ module bearing_inlet(){
     translate([0,0,in])
     difference(){
     union(){
-            translate([0,0,0]) inlet(height=1, length=1, width=3, hanger_height=3);
+            translate([0,0,0]) inlet(height=1, length=1, width=3, hanger_height=4);
             
             //inlet ramp
             translate([peg_sep,0,0]) track(rise=-.25*in, run=4*in, solid=1, end_angle=90, end_scale=[1.33,1,1]);
@@ -110,7 +111,7 @@ module bearing_inlet(){
             hanger(solid=1, hole=[6,4], drop=in*3.7, rot = 25);
            
             //hanger(solid=1, hole=[0,4], drop=in*3.5, rot =-20);
-            hanger(solid=1, hole=[2,4], drop=in*3.5, rot = 20);
+            hanger(solid=1, hole=[2,5], drop=in*3.5, rot = 11);
             
         }
         
@@ -129,8 +130,8 @@ module bearing_inlet(){
            
         //hanger(solid=-1, hole=[1,2], drop=in*6.5);
            
-        hanger(solid=-1, hole=[0,4], drop=in*3.5, rot =-20);
-        hanger(solid=-1, hole=[2,4], drop=in*3.5, rot = 20);
+        //hanger(solid=-1, hole=[0,5], drop=in*3.5, rot =-20);
+        hanger(solid=-1, hole=[2,5], drop=in*3.5, rot = 20);
     }
 }
 
@@ -188,7 +189,7 @@ module bearing(bearing=true, drive_gear=false){
     // thickness
     T=ball_rad*2+wall/2;
     // clearance
-    tol=.3;
+    tol=.2;
     number_of_planets=7;
     number_of_teeth_on_planets=11;
     approximate_number_of_teeth_on_sun=21;

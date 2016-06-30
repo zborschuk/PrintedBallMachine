@@ -14,9 +14,15 @@ screw_drop();
 translate([peg_sep*4,0,-peg_sep*4])  reverse_module();
 
 //inlet ramp
-module screw_drop(inlet_length=1, exit=-1){
+module screw_drop(inlet_length=1, exit=1, height = 2.5){
     
-    drop = 2.5*in/11;
+    turns = floor(height);
+    segments = turns*4+1+((exit==-1)?2:3);
+    
+    echo(segments);
+    drop = (height*in)/segments;
+    
+    
     
     translate([0,0,in])
     difference(){
@@ -50,12 +56,11 @@ module screw_drop(inlet_length=1, exit=-1){
                 if(exit == 0){
                     
                 }
-            
-                hanger(solid=1, hole=[4,2], drop=in*3.1, rot=12);
             }
+            hanger(solid=1, hole=[2+inlet_length,2], drop=in*3.1, rot=10);
         }
         
-        hanger(solid=-1, hole=[4,2], drop=in*3.1, rot=12);
+        hanger(solid=-1, hole=[2+inlet_length,2], drop=in*3.1, rot=10);
         
         //the back isn't quite flat
         translate([peg_sep*2,100,0]) cube([200,200,200], center=true);
