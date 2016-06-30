@@ -55,16 +55,16 @@ module assembled(inlet = 1, outlet = 1){
     bearing_outlet();
     
     //drop the ball into the switch
-    translate([in*8,0,in*4]) screw_drop(inlet_length=1, exit=-1);
+    translate([in*8,0,in*4]) screw_drop(inlet_length=2, exit=-1);
     
     
     //these two need to be made into a single switch.
     //return path
-    translate([in*9,0,in*0]) mirror([1,0,0]) slope_module(size = [3,-.5], height=0);
+    translate([in*10,0,in*0]) mirror([1,0,0]) slope_module(size = [4,-.5], height=0);
     
        
     //ongoing path
-    translate([in*8,0,in*0]) mirror([0,0,0]) slope_module(size = [3,-.5], inlet = REVERSE);
+    translate([in*9,0,in*0]) mirror([0,0,0]) slope_module(size = [2,-.5], inlet = REVERSE);
 }
 
 
