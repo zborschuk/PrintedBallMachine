@@ -2,6 +2,7 @@ include <../configuration.scad>;
 use <../base.scad>;
 use <bearing.scad>;
 use <../screw_drop/screw_drop.scad>;
+use <../screw_drop/bowl_drop.scad>;
 
 peg_sep = 25.4;
 
@@ -28,9 +29,11 @@ if(part == 3)
 if(part == 4)
     screw_drop(inlet_length=2, exit=-1);
 if(part == 5)
-    mirror([1,0,0]) slope_module(size = [4,-.5], height=2.5);
+    translate([in*9, 0, in*2]) inlet_switch(left_length = 3, right_length = 2);
 if(part == 6)
-    slope_module(size = [2,-.5], inlet = REVERSE);
+    switch();
+if(part == 7)
+    bowl_drop(inlet_length=2, height = 2, jut=1, rad=1.5);
 
 
 if(part==10){
@@ -48,14 +51,15 @@ module assembled(inlet = 1, outlet = 1){
         bearing_inlet();
     }
     
-    translate([in*4.5,-in*1-1-ball_rad*2-wall,in*4]) rotate([90,0,0]) mirror([0,0,1]) rotate([0,0,30]) bearing();
+    *translate([in*4.5,-in*1-1-ball_rad*2-wall,in*4]) rotate([90,0,0]) mirror([0,0,1]) rotate([0,0,30]) bearing();
     
-    translate([in/2, -in, in*3+6]) rotate([90,0,0])  rotate([0,0,90]) translate([0,0,1+ball_rad*2+wall/2+2]) rotate([0,0,8]) rotate([180,0,0]) bearing(bearing=false, drive_gear=true);
+    *translate([in/2, -in, in*3+6]) rotate([90,0,0])  rotate([0,0,90]) translate([0,0,1+ball_rad*2+wall/2+2]) rotate([0,0,8]) rotate([180,0,0]) bearing(bearing=false, drive_gear=true);
     
     bearing_outlet();
     
     //drop the ball into the switch
-    translate([in*8,0,in*4]) screw_drop(inlet_length=2, exit=-1);
+    //translate([in*8,0,in*4]) screw_drop(inlet_length=2, exit=-1);
+    translate([in*8,0,in*4]) bowl_drop(inlet_length=2, height = 2, jut=1, rad=1.5);
     
     
     //these two need to be made into a single switch.
@@ -191,7 +195,7 @@ module bearing(bearing=true, drive_gear=false){
     // thickness
     T=ball_rad*2+wall/2;
     // clearance
-    tol=.2;
+    tol=.15;
     number_of_planets=7;
     number_of_teeth_on_planets=11;
     approximate_number_of_teeth_on_sun=21;

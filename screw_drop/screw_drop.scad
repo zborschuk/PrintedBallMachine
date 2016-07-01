@@ -17,7 +17,7 @@ translate([peg_sep*4,0,-peg_sep*4])  reverse_module();
 module screw_drop(inlet_length=1, exit=1, height = 2.5){
     
     turns = floor(height);
-    segments = turns*4+1+((exit==-1)?2:3);
+    segments = turns*4+1+((exit==-1)?3:2);
     
     echo(segments);
     drop = (height*in)/segments;

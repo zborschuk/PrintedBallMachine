@@ -245,17 +245,29 @@ module inlet(height = 1, width = 3, length = 1, hanger_height=1, lift=5, outlet=
 
 //two kinds of switch - manual or flip flop.
 module switch(solid=1, type = SWITCH){
-    post_rad = 2;
+    post_rad = 2.5;
+    bearing_rad = 10/2+slop;
+    flange_rad = 12.25/2;
     translate([0,-post_rad*2-slop*2,0]){
         if(solid == 1){
             union(){
-                cylinder(r=post_rad, h=in);
-                translate([0,0,wall*2]) cylinder(r=post_rad*2, h=in-wall*3);
+                cylinder(r=post_rad-slop/2, h=in);
+                translate([0,0,wall*2]) cylinder(r=post_rad*2, h=in-wall*5);
                 
                 if(type == SWITCH){
-                    hull(){
-                        translate([0,0,wall*2]) cylinder(r=post_rad*2, h=in-wall*3);
-                        translate([0,-in*sqrt(2),wall+in/2]) cylinder(r=post_rad, h=in/4, center=true);
+                    rotate([0,0,-33]) union(){
+                         hull(){
+                            translate([0,0,wall*3]) cylinder(r=post_rad*2, h=in-wall*5);
+                            translate([post_rad,-in*1,wall+in/2]) cylinder(r=post_rad/2, h=in/4, center=true);
+                        }
+                        hull(){
+                            translate([0,0,wall*3]) cylinder(r=post_rad*2, h=in-wall*5);
+                            rotate([0,0,65]) translate([post_rad,-in*.85,wall+in/2]) cylinder(r=post_rad/2, h=in/4, center=true);
+                        }
+                        hull(){
+                            translate([0,0,wall*3]) cylinder(r=post_rad*2, h=in-wall*5);
+                            rotate([0,0,-73]) translate([post_rad,-in*.85,wall+in/2]) cylinder(r=post_rad/2, h=in/4, center=true);
+                        }
                     }
                 }
                 
@@ -263,19 +275,25 @@ module switch(solid=1, type = SWITCH){
         }
     
         if(solid == -1){
-            cylinder(r=post_rad+slop, h=in*2.5, center=true);
-            translate([0,-post_rad*1.33,in]) cylinder(r=post_rad+slop*2, h=in/2, center=true);
+            hull(){
+                
+                
+                cylinder(r=post_rad+slop*2, h=in*2.5, center=true);
+                translate([0,-post_rad*1.33,in]) cylinder(r=post_rad+slop*4, h=in/2, center=true);
+            }
             
-            translate([0,0,wall*2]) cylinder(r=post_rad*2+slop*3, h=in-wall*3);
+            cylinder(r=bearing_rad+slop/2, h=wall*5, center=true);
+            translate([0,0,wall*2]) cylinder(r=flange_rad, h=in-wall*3);
         }
     }
 }
 
 module switch_clip(){
-    post_rad = 2;
-    translate([0,0,in-wall/2]){
+    post_rad = 2.5;
+    bearing_rad = 10/2;
+    translate([0,0,in]){
         hull(){
-            translate([0,-post_rad,0]) scale([1,1.25,1]) cylinder(r=post_rad*2, h=wall*1.5);
+            translate([0,-bearing_rad+wall-wall/2,0]) scale([1,1,1]) cylinder(r=bearing_rad+wall/2, h=wall*1.5);
         }
     }
 }
@@ -329,10 +347,20 @@ module inlet_switch(height = 1, width = 3, inlet_length = 2, left_length = 3, ri
         translate([50+in+right_length*in,0,0]) cube([100,100,100], center=true);
         
         //ball path
-        for(i=[0,1]) mirror([i,0,0]) hull(){
-            translate([0,-peg_sep/2,in/2+wall]) translate([0,0,0]) sphere(r=in/2-wall*1.5);
-            translate([-in-wall*2,-peg_sep/2,track_rad+wall+.75]) translate([0,0,ball_rad-track_rad]) sphere(r=track_rad);
+        for(i=[0,1]) mirror([i,0,0]){
+            hull(){
+                translate([0,-peg_sep/2,in/2+wall]) translate([0,0,0]) sphere(r=in/2-wall*1.5);
+                translate([-in-wall*2,-peg_sep/2,track_rad+wall+.75]) translate([0,0,ball_rad-track_rad]) sphere(r=track_rad);
+            }
+            
+            //this just shores up the openings
+            hull(){
+                translate([-in,-peg_sep/2,track_rad+wall+2]) translate([0,0,ball_rad-track_rad]) sphere(r=track_rad);
+                translate([-in,-peg_sep/2-in,track_rad+wall+.75+in]) translate([0,0,ball_rad-track_rad]) sphere(r=track_rad);
+            }
         }
+        
+        //shore up the 
         
         //hole for the switch mount
         translate([0,-wall,0]) switch(solid = -1);
