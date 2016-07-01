@@ -2,7 +2,7 @@ include<configuration.scad>
 use <pins.scad>
 use <base.scad>
 
-part = 5;
+part = 6;
 
 //laid out for printing
 if(part == 0)   //peg
@@ -21,6 +21,9 @@ if(part == 4)   //stand for a 12x12 board
 if(part == 5)   //stand for a 12x12 board
     translate([0,0,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90])
         peg_stand(height=4, front_drop=2);
+
+if(part == 6)   //joins two boards together
+    rotate([90,0,0]) peg_joiner();
 
 if(part == 10){
     //peg for printing
@@ -89,6 +92,18 @@ module peg(peg=PEG_HOOK, peg_units=1, lower_peg_thick = peg_thick){
         //cut off top and bottom for easier printing
         translate([100+peg_rad-cutoff,0,0]) cube([200,200,200], center=true);
         translate([-100-peg_rad+cutoff,0,0]) cube([200,200,200], center=true);
+    }
+}
+
+//Join two panels together
+module peg_joiner(peg_units = 2, width=1){
+    union(){
+        //two pegs
+        peg(peg=NONE, peg_units=peg_units);
+        translate([width*in, 0, 0]) peg(peg=NONE, peg_units=peg_units);
+    
+        //join them together
+        translate([in/2,-wall,in*1.5-peg_units*in]) cube([width*in, wall, peg_units*in]);
     }
 }
 
