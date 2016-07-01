@@ -96,11 +96,11 @@ module peg(peg=PEG_HOOK, peg_units=1, lower_peg_thick = peg_thick){
 }
 
 //Join two panels together
-module peg_joiner(peg_units = 2, width=1){
+module peg_joiner(peg_units = 1, width=1){
     union(){
         //two pegs
-        peg(peg=NONE, peg_units=peg_units);
-        translate([width*in, 0, 0]) peg(peg=NONE, peg_units=peg_units);
+        peg(peg=NONE, peg_units=peg_units, lower_peg_thick = peg_thick*1.25);
+        translate([width*in, 0, 0]) peg(peg=NONE, peg_units=peg_units, lower_peg_thick = peg_thick*1.25);
     
         //join them together
         translate([in/2,-wall,in*1.5-peg_units*in]) cube([width*in, wall, peg_units*in]);
