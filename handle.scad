@@ -10,6 +10,9 @@ hole_sep = 25.4;
 
 handle();
 
+width = 4.5;
+height = 3;
+
 module handle(){
     min_rad = in/8;
     
@@ -19,27 +22,29 @@ module handle(){
         minkowski(){
             difference(){
                 hull(){
-                    cube([5.5*in, 3*in, thick], center=true);
-                    translate([0,-.5*in,0]) cube([.125*in, 3*in, thick], center=true);
+                    cube([width*in, (height-.5)*in, thick], center=true);
+                    translate([0,-.5*in,0]) cube([.125*in, (height-.5)*in, thick], center=true);
                 }
                 
                 //hanging holes
-                for(i=[-1:1/2:1]){
-                    translate([2.25*in*i,-1.5*in+.5*in*abs(i), 0]) cylinder(r=9, h=200, center=true);
+                for(i=[-1:.5:1]){
+                    translate([(width/2*in-in/2)*i,-(height/2-.25)*in+.333*in*abs(i), 0]) cylinder(r=9, h=200, center=true);
                     echo(.5*abs(i));
                     echo(.333*abs(i));
                 }
                 
                 
-                translate([.5*in,.5*in,0]) rotate([0,0,45/2]) cylinder(r=3*in/2, h=200, center=true, $fn=8);
-                translate([-.5*in,.5*in,0]) rotate([0,0,45/2]) cylinder(r=3*in/2, h=200, center=true, $fn=8);
+                hull(){
+                    translate([.5*in,.5*in,0]) rotate([0,0,45/2]) cylinder(r=(height-.5)*in/2, h=200, center=true, $fn=8);
+                    translate([-.5*in,.5*in,0]) rotate([0,0,45/2]) cylinder(r=(height-.5)*in/2, h=200, center=true, $fn=8);
+                }
             }
             sphere(r=min_rad, $fn=8);
         }
         
-        translate([0,1.25*in-2,1/2*in]) cube([6*in, 1*in, 1*in], center=true);
+        translate([0,(height-1)/2*in,1/2*in]) cube([6*in, 1*in, 1*in], center=true);
         
         //pegboard holes
-        for(i=[0:hole_sep:500]) translate([5.5*in-i,1.125*in,0]) cylinder(r=hole_rad, h=200, center=true);
+        for(i=[width%2*in:hole_sep:500]) translate([5.5*in-i,(height/2-.5)*in,0]) cylinder(r=hole_rad, h=200, center=true);
     }
 }

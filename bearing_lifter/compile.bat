@@ -6,6 +6,7 @@ openscad bearing_lifter.scad -D part=4 -o bl_spiral.stl
 openscad bearing_lifter.scad -D part=5 -o bl_inlet_switch.stl
 openscad bearing_lifter.scad -D part=6 -o bl_switch.stl
 openscad bearing_lifter.scad -D part=7 -o bl_bowl.stl
+openscad bearing_lifter.scad -D part=7 -o bl_slope.stl
 
 openscad ../peg.scad -D part=0 -o peg_1x.stl
 openscad ../peg.scad -D part=1 -o peg_2x.stl

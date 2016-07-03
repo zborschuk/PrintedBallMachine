@@ -10,12 +10,14 @@ dflat=.2;
 
 //uncomment for printing
 //!rotate([-90,0,0])
-bowl_drop();
+//bowl_drop();
+
+bowl_drop(inlet_length=6, height = 2, jut=1, rad=3, height_scale=.55*in, lower=11.3);
 
 translate([peg_sep*4,0,-peg_sep*4])  reverse_module();
 
 //inlet ramp
-module bowl_drop(inlet_length=2, inlet_width=2, height = 2.5, rad = 1.5, height_scale = in, lower = -.2, jut = 1){ 
+module bowl_drop(inlet_length=2, inlet_width=3, height = 2.5, rad = 1.5, height_scale = in, lower = -.2, jut = 1){ 
     
     //height_scale = in*3/4;
     //lower = 6.24;
@@ -23,7 +25,7 @@ module bowl_drop(inlet_length=2, inlet_width=2, height = 2.5, rad = 1.5, height_
     translate([0,0,in])
     difference(){
         union(){
-            inlet(height=1, length=inlet_length, width=inlet_width, hanger_height=1, outlet=INLET_SLOT);
+            inlet(height=1, length=inlet_length, width=inlet_width, hanger_height=1, outlet=NONE);
         
         
             //rim
@@ -41,8 +43,11 @@ module bowl_drop(inlet_length=2, inlet_width=2, height = 2.5, rad = 1.5, height_
             
         }
         
-        //slope it
+
+        
+        //inner cone
         translate([in*rad,-in*rad,in+wall*2-.9-lower]) rotate([0,90,0]) horn(.2, 11.25, [height_scale, in*rad-wall*2, in*rad-wall*2]);
+        
         //rim hollow
         translate([in*rad,-in*rad,wall*2-.8]) cylinder(r=in*rad-wall, h = in*2);
         

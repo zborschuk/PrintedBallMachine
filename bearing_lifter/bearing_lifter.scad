@@ -15,7 +15,8 @@ num_balls = 17;
 part = 10;
 
 //next section
-%translate([in*12,0,-in*3]) inlet(height=5);
+%translate([in*12,0,in*1]) inlet();
+%translate([in*12,0,in*4]) inlet();
 
 //laid out for printing
 if(part == 0)
@@ -29,11 +30,13 @@ if(part == 3)
 if(part == 4)
     screw_drop(inlet_length=2, exit=-1);
 if(part == 5)
-    translate([in*9, 0, in*2]) inlet_switch(left_length = 3, right_length = 2);
+    inlet_switch(left_length = 3, right_length = 2);
 if(part == 6)
     switch();
 if(part == 7)
-    bowl_drop(inlet_length=2, height = 2, jut=1, rad=1.5);
+    bowl_drop(inlet_length=3, height = 2, rad=1.5, height_scale=.8*in, lower=4.9);
+if(part == 8)
+    offset_slope();
 
 
 if(part==10){
@@ -57,20 +60,14 @@ module assembled(inlet = 1, outlet = 1){
     
     bearing_outlet();
     
-    //drop the ball into the switch
+    //three options for exit:
     //translate([in*8,0,in*4]) screw_drop(inlet_length=2, exit=-1);
-    translate([in*8,0,in*4]) bowl_drop(inlet_length=2, height = 2, jut=1, rad=1.5);
+    //translate([in*8,0,in*4]) bowl_drop(inlet_length=3, height = 2, rad=1.5, height_scale=.8*in, lower=4.9);
+    //this just passes on max height to the next module
+    translate([in*8,0,in*3]) offset_slope_module(size = [3,-.5]);
     
-    
-    //these two need to be made into a single switch.
-    //return path
-    //translate([in*10,0,in*0]) mirror([1,0,0]) slope_module(size = [4,-.5], height=0);
-    
-       
-    //ongoing path
-    //translate([in*9,0,in*0]) mirror([0,0,0]) slope_module(size = [2,-.5], inlet = REVERSE);
+    //recirculating switch - allows the module to recirculate or pass on
     translate([in*9, 0, in*2]) inlet_switch(left_length = 3, right_length = 2);
-    
 }
 
 

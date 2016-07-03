@@ -11,8 +11,8 @@ offset_slope_module(offset=2);
 translate([in*5,0,-in*1]) 
 slope_module();
 
-!inlet_switch();
-
+inlet_switch();
+switch();
 
 //this module angles to the other side, acts as a brake to slow down long runs.
 //rotate([-90,0,0])
@@ -65,6 +65,9 @@ module slope_module(size = [4, -.5], width=3, inlet = NORMAL){
     }
 }
 
+!offset_slope_module(size = [3,-.5]);
+
+
 //A sample module which uses the inlet to roll balls down a chute.
 module offset_slope_module(size = [4, -.5], offset=1){
     inset = wall;
@@ -84,8 +87,8 @@ module offset_slope_module(size = [4, -.5], offset=1){
             
             //lower end support
             hull(){
-                translate([in*4.5,0,in*2.5-in*.75]) rotate([90,0,0]) rotate([0,0,22.5]) cylinder(r=wall*2, h=in*1.5, $fn=8);
-                translate([in*4.5,0,in*2.5-in*.55]) rotate([90,0,0]) rotate([0,0,22.5]) cylinder(r=wall*2, h=in*1.5, $fn=8);
+                translate([(floor(size[0])+.5)*in,0,in*2.5-in*.75]) rotate([90,0,0]) rotate([0,0,22.5]) cylinder(r=wall*2, h=in*1.5, $fn=8);
+                translate([(floor(size[0])+.5)*in,0,in*2.5-in*.55]) rotate([90,0,0]) rotate([0,0,22.5]) cylinder(r=wall*2, h=in*1.5, $fn=8);
             }
             
         }
@@ -134,7 +137,7 @@ module reverse_module(size = [4, -.5]){
 }
 
 /* The inlet module.
- * ABSOLUTELY REQUIRED: two (2) scalloped entryu points, 1" and 1" from the hook.  The height and radius are not to deviate.
+ * ABSOLUTELY REQUIRED: two (2) scalloped entry points, centered 1" and 2" from the hook.  The height and radius are not to deviate.
  *
  * Variables:
  * height: Given in units of pegboard; raises or lowers your inlet, for convenience.  Must be a whole number.
@@ -153,7 +156,6 @@ module inlet(height = 1, width = 3, length = 1, hanger_height=1, lift=5, outlet=
     
     side_supports = length-1;
     
-    inlet_y = inlet_y/2*width;
     inlet_x = inlet_x*length;
     inlet_y = inlet_y/2*width;
     
@@ -201,6 +203,8 @@ module inlet(height = 1, width = 3, length = 1, hanger_height=1, lift=5, outlet=
                     } 
                     //translate([wall,wall,wall]) cube([inlet_x-wall*2-inset,inlet_y-wall*2,inlet_z]);
                 }
+                
+                //this is the main body
                 translate([wall,wall,wall*2.5]) cube([inlet_x-wall*2,inlet_y-wall*2,.1]);
                 translate([0,wall,inlet_z+lift+.1]) rotate([0,-lift_angle,0])  translate([wall,0,0]) cube([inlet_x+inset-wall*2,inlet_y-wall*2,.1]);
             }
@@ -255,18 +259,12 @@ module switch(solid=1, type = SWITCH){
                 translate([0,0,wall*2]) cylinder(r=post_rad*2, h=in-wall*5);
                 
                 if(type == SWITCH){
-                    rotate([0,0,-33]) union(){
+                    rotate([0,0,-45]) union(){
                          hull(){
                             translate([0,0,wall*3]) cylinder(r=post_rad*2, h=in-wall*5);
-                            translate([post_rad,-in*1,wall+in/2]) cylinder(r=post_rad/2, h=in/4, center=true);
-                        }
-                        hull(){
-                            translate([0,0,wall*3]) cylinder(r=post_rad*2, h=in-wall*5);
-                            rotate([0,0,65]) translate([post_rad,-in*.85,wall+in/2]) cylinder(r=post_rad/2, h=in/4, center=true);
-                        }
-                        hull(){
-                            translate([0,0,wall*3]) cylinder(r=post_rad*2, h=in-wall*5);
-                            rotate([0,0,-73]) translate([post_rad,-in*.85,wall+in/2]) cylinder(r=post_rad/2, h=in/4, center=true);
+                            translate([0,-in*1,wall*4]) cylinder(r=post_rad/2, h=in-wall*6);
+                            
+                             for(i=[0,1]) mirror([i,0,0]) rotate([0,0,72]) translate([0,-in*.25,wall*4]) cylinder(r=post_rad, h=in-wall*6);
                         }
                     }
                 }
