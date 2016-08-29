@@ -36,7 +36,7 @@ if(part == 6)
 if(part == 7)
     bowl_drop(inlet_length=3, height = 2, rad=1.5, height_scale=.8*in, lower=4.9);
 if(part == 8)
-    offset_slope();
+    offset_slope_module(size = [3, -.5], offset=1);
 
 
 if(part==10){
@@ -64,7 +64,7 @@ module assembled(inlet = 1, outlet = 1){
     //translate([in*8,0,in*4]) screw_drop(inlet_length=2, exit=-1);
     //translate([in*8,0,in*4]) bowl_drop(inlet_length=3, height = 2, rad=1.5, height_scale=.8*in, lower=4.9);
     //this just passes on max height to the next module
-    translate([in*8,0,in*3]) offset_slope_module(size = [3,-.5]);
+    translate([in*8,0,in*3]) offset_slope_module(size = [3, -.5], offset=1);
     
     //recirculating switch - allows the module to recirculate or pass on
     translate([in*9, 0, in*2]) inlet_switch(left_length = 3, right_length = 2);

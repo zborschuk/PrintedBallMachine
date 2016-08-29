@@ -12,12 +12,19 @@ dflat=.2;
 //!rotate([-90,0,0])
 //bowl_drop();
 
-bowl_drop(inlet_length=6, height = 2, jut=1, rad=3, height_scale=.55*in, lower=11.3);
+//this is as big as can be used with a standard base
+!bowl_drop(inlet_length=5, height = 2-.125, rad=2.5, height_scale=.55*in, lower=11.3);
 
-translate([peg_sep*4,0,-peg_sep*4])  reverse_module();
+//this requres a special collector.
+translate([peg_sep*6,0,0]) bowl_drop(inlet_length=6, height = 2-.125, rad=3.5, height_scale=.55*in-.191*in, lower=11.3+4.8);
+
+
+translate([peg_sep*2,0,-peg_sep*4])  reverse_module();
+
+translate([peg_sep*9,0,-peg_sep*4])  reverse_module();
 
 //inlet ramp
-module bowl_drop(inlet_length=2, inlet_width=3, height = 2.5, rad = 1.5, height_scale = in, lower = -.2, jut = 1){ 
+module bowl_drop(inlet_length=2, inlet_width=3, height = 2.5, rad = 1.5, height_scale = in, lower = -.2){ 
     
     //height_scale = in*3/4;
     //lower = 6.24;
@@ -46,7 +53,7 @@ module bowl_drop(inlet_length=2, inlet_width=3, height = 2.5, rad = 1.5, height_
 
         
         //inner cone
-        translate([in*rad,-in*rad,in+wall*2-.9-lower]) rotate([0,90,0]) horn(.2, 11.25, [height_scale, in*rad-wall*2, in*rad-wall*2]);
+        translate([in*rad,-in*rad,in+wall*2-.9-lower]) rotate([0,90,0]) horn(.2, 11.25, [height_scale, in*rad-wall*2, in*rad-wall*3]);
         
         //rim hollow
         translate([in*rad,-in*rad,wall*2-.8]) cylinder(r=in*rad-wall, h = in*2);
@@ -56,7 +63,7 @@ module bowl_drop(inlet_length=2, inlet_width=3, height = 2.5, rad = 1.5, height_
         cylinder(r=track_rad, h=height*8*in, center=true);
         
         //cut the base
-        translate([0,0,-100-height*in]) cube([200,200,200], center=true);
+        translate([0,0,-200-height*in]) cube([400,400,400], center=true);
     }
 }
 

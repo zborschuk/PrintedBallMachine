@@ -11,6 +11,9 @@ peg_thick = 1/4*in;
 
 wall=3;
 
+//used for the ball return
+dowel_rad = (3/8)/2*in;
+
 //ball variables
 ball_rad = 5/8*in/2;
 

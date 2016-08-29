@@ -2,7 +2,7 @@ include<configuration.scad>
 use <pins.scad>
 use <base.scad>
 
-part = 6;
+part = 5;
 
 //laid out for printing
 if(part == 0)   //peg
@@ -20,7 +20,7 @@ if(part == 4)   //stand for a 12x12 board
 
 if(part == 5)   //stand for a 12x12 board
     translate([0,0,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90])
-        peg_stand(height=4, front_drop=2);
+        peg_stand(height=5, front_drop=2);
 
 if(part == 6)   //joins two boards together
     rotate([90,0,0]) peg_joiner();
@@ -142,7 +142,7 @@ module square_peg(){
 
 module ball_return_peg(){
     $fn=30;
-    dowel_rad = (3/8)/2*in;
+    
     
     thick = peg_rad*2-2;
     separation = -12.85;
@@ -234,7 +234,7 @@ module peg_stand(peg_units = 1, thick = in*.6, height=3, front_drop=1, base_leng
         
         
         //cut off side for easier printing
-        translate([-100-peg_rad+cutoff,0,0]) cube([200,200,200], center=true);
+        translate([-200-peg_rad+cutoff,0,0]) cube([400,400,400], center=true);
         
         //cut off bottom so it can standor easier printing
         translate([-100-peg_rad+cutoff,0,0]) cube([200,200,200], center=true);
