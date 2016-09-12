@@ -37,6 +37,9 @@ PEG_PIN = 1;
 PEG_HOOK = 2;
 PEG_NONE = 0;
 
+m3_rad = 3/2 + slop;
+m3_cap_rad = 6/2 + slop;
+
 //pin variables
 pin_tolerance = .25;
 pin_rad = 4;

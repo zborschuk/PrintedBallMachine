@@ -6,24 +6,69 @@ peg_sep = 25.4;
 
 dflat=.2;
 
-%pegboard([10,10]);
+%pegboard([12,12]);
 
-//uncomment for printing
-//!rotate([-90,0,0])
-//bowl_drop();
+part = 10;
 
-//this is as big as can be used with a standard base
-!bowl_drop(inlet_length=5, height = 2-.125, rad=2.5, height_scale=.55*in, lower=11.3);
+if(part == 0)
+    rotate([-90,0,0]) bowl_drop(inlet_length=5, height = 2-.125, rad=2.5, height_scale=.55*in, lower=11.3);
 
-//this requres a special collector.
-translate([peg_sep*6,0,0]) bowl_drop(inlet_length=6, height = 2-.125, rad=3.5, height_scale=.55*in-.191*in, lower=11.3+4.8);
+if(part == 1)
+    rotate([-90,0,0]) bowl_drop(inlet_length=6, height = 2-.125, rad=3.5, height_scale=.55*in-.191*in, lower=11.3+4.8);
 
+if(part == 2)
+    rotate([0,270,0]) bowl_drop_inlet(length=5);
 
-translate([peg_sep*2,0,-peg_sep*4])  reverse_module();
+if(part == 3)
+    rotate([0,270,0]) bowl_drop_outlet(extend=3);
 
-translate([peg_sep*9,0,-peg_sep*4])  reverse_module();
+if(part == 10){
+    //this requres a special collector.
+    translate([peg_sep*6,0,peg_sep*4]) bowl_drop(inlet_length=6, height = 2-.125, rad=3.5, height_scale=.55*in-.191*in, lower=11.3+4.8);
+    
+    translate([0,0,peg_sep*4]) bowl_drop_inlet(length=5);
+    
+    translate([peg_sep*9,0,peg_sep*2]) bowl_drop_outlet(extend=3);
+}
 
-//inlet ramp
+//inlet ramp - get some speed
+module bowl_drop_inlet(length=4){
+    slope_module(size = [length, -.5], width=3, inlet = NORMAL);
+}
+
+//catch the ball, and pass it on
+module bowl_drop_outlet(extend=3){
+    extra = 4;
+    angle = -6;
+    difference(){
+        union(){
+            translate([0,0,-peg_sep*2]) slope_module(size = [2, -.5], width=1, inlet = NORMAL);
+            
+            //reach out for the ball
+            translate([peg_sep/2,-peg_sep+extra,peg_sep/2+wall]) rotate([0,0,-90]) track_trough(length=(extend-.5)*in+extra, angle=angle);
+            
+            //catcher
+            translate([peg_sep*.5,-peg_sep*.5,peg_sep*.5+wall+ball_rad*.5]) rotate([angle-1,0,0]) translate([0,-peg_sep*extend,0]) sphere(r=ball_rad*2.5);
+        }
+        
+        //open the catcher up
+        translate([peg_sep*.5,-peg_sep*.5,peg_sep*.5+wall]) rotate([angle-1,0,0]) translate([0,-peg_sep*extend,ball_rad*3]) cube([ball_rad*6, ball_rad*6, ball_rad*6], center=true);
+        hull(){
+            translate([peg_sep*.5,-peg_sep*.5,peg_sep*.5+wall]) rotate([angle-1,0,0]) translate([0,-peg_sep*extend,0]) sphere(r=ball_rad+wall);
+            translate([peg_sep*.5,-peg_sep*.5,peg_sep*.5+wall]) rotate([angle-1,0,0]) translate([0,-peg_sep*extend,0]) rotate([6,0,0]) translate([0,0,ball_rad*1.333]) sphere(r=ball_rad*2.5);
+        }
+        
+        //hollow the track
+        translate([peg_sep/2,-peg_sep+extra+.5,peg_sep/2+wall]) rotate([0,0,-90]) track_hollow(length=(extend-.5)*in+extra+1, angle=angle);
+        
+        //slope the ball in
+        hull(){
+            translate([peg_sep*.5,-peg_sep*.5,peg_sep*.5+wall]) sphere(r=ball_rad+wall);
+             translate([peg_sep*.5,-peg_sep*.5,peg_sep*.5+wall]) rotate([angle-1,0,0]) translate([0,-peg_sep*extend,0]) sphere(r=ball_rad+wall);
+        }
+    }
+}
+
 module bowl_drop(inlet_length=2, inlet_width=3, height = 2.5, rad = 1.5, height_scale = in, lower = -.2){ 
     
     //height_scale = in*3/4;

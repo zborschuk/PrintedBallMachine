@@ -9,9 +9,11 @@ dflat=.2;
 
 //uncomment for printing
 //!rotate([-90,0,0])
-screw_drop();
+screw_drop(height = 2.55);
+translate([peg_sep*3,0,-peg_sep*4])  reverse_module();
 
-translate([peg_sep*4,0,-peg_sep*4])  reverse_module();
+!translate([0,0,peg_sep*4]) screw_drop(inlet_length=2, height = 1.5);
+translate([peg_sep*4,0,peg_sep])  reverse_module();
 
 //inlet ramp
 module screw_drop(inlet_length=1, exit=1, height = 2.5){
@@ -19,6 +21,7 @@ module screw_drop(inlet_length=1, exit=1, height = 2.5){
     turns = floor(height);
     segments = turns*4+1+((exit==-1)?3:2);
     
+    echo(turns);
     echo(segments);
     drop = (height*in)/segments;
     
@@ -32,14 +35,16 @@ module screw_drop(inlet_length=1, exit=1, height = 2.5){
             translate([peg_sep*inlet_length,0,0]){
                 track(rise=-drop*2, run=2*in, solid=1, end_angle=90);
             
-                translate([-peg_sep*2,0,-drop]) spiral(drop=drop, turns=4);
-                translate([-peg_sep*2,0,-drop*5]) spiral(drop=drop, turns=4);
-                //translate([0,0,-drop*9]) spiral(drop=drop);
+                for(i=[0:turns-1]) translate([-peg_sep*2,0,-drop-drop*4*i]) {
+                    spiral(drop=drop, turns=4);
+                }
+                
+                //translate([-peg_sep*2,0,-drop*5]) spiral(drop=drop, turns=4);
             
                 //exit right
                 if(exit == 1){
                     difference(){
-                        translate([peg_sep*1+.5,-peg_sep+1,-drop*10]) mirror([1,1,0]) track(rise=-drop, run=in, solid=1, end_angle=90);
+                        translate([peg_sep*1+.5,-peg_sep+1,-drop*(turns*4+1+1)]) mirror([1,1,0]) track(rise=-drop, run=in, solid=1, end_angle=90);
                         translate([peg_sep*4+50-1,0,0]) cube([100,100,200], center=true);
                     }
                 }
@@ -47,7 +52,7 @@ module screw_drop(inlet_length=1, exit=1, height = 2.5){
                 //exit left
                 if(exit == -1){
                     difference(){
-                        translate([peg_sep*0+.5-10,-peg_sep+.1-peg_sep,-drop*12]) mirror([0,1,0]) track(rise=drop*2, run=in*2+10, solid=1, end_angle=90);
+                        translate([peg_sep*0+.5-10,-peg_sep+.1-peg_sep,-drop*(turns*4+1+2+1)]) mirror([0,1,0]) track(rise=drop*2, run=in*2+10, solid=1, end_angle=90);
                         translate([peg_sep*0-50+1,0,0]) cube([100,200,200], center=true);
                     }
                 }
@@ -57,10 +62,10 @@ module screw_drop(inlet_length=1, exit=1, height = 2.5){
                     
                 }
             }
-            hanger(solid=1, hole=[2+inlet_length,2], drop=in*3.1, rot=10);
+            hanger(solid=1, hole=[2+inlet_length,2], drop=in*(1.1+turns), rot=10);
         }
         
-        hanger(solid=-1, hole=[2+inlet_length,2], drop=in*3.1, rot=10);
+        hanger(solid=-1, hole=[2+inlet_length,2]);
         
         //the back isn't quite flat
         translate([peg_sep*2,100,0]) cube([200,200,200], center=true);

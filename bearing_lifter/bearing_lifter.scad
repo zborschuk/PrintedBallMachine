@@ -12,7 +12,7 @@ hole_rad = 8;
 lift_rad = in*3;
 num_balls = 17;
 
-part = 10;
+part = 3;
 
 //next section
 %translate([in*12,0,in*1]) inlet();
@@ -37,6 +37,8 @@ if(part == 7)
     bowl_drop(inlet_length=3, height = 2, rad=1.5, height_scale=.8*in, lower=4.9);
 if(part == 8)
     offset_slope_module(size = [3, -.5], offset=1);
+if(part == 9)
+    bearing_fingergaurd();
 
 
 if(part==10){
@@ -54,7 +56,9 @@ module assembled(inlet = 1, outlet = 1){
         bearing_inlet();
     }
     
-    *translate([in*4.5,-in*1-1-ball_rad*2-wall,in*4]) rotate([90,0,0]) mirror([0,0,1]) rotate([0,0,30]) bearing();
+    translate([in*4.5,-in*1-1-ball_rad*2-wall,in*4]) rotate([90,0,0]) mirror([0,0,1]) rotate([0,0,30]) bearing();
+    
+    translate([in*4.5,-in*1-1-ball_rad*2-wall,in*4+1]) rotate([90,0,0]) bearing_fingergaurd();
     
     *translate([in/2, -in, in*3+6]) rotate([90,0,0])  rotate([0,0,90]) translate([0,0,1+ball_rad*2+wall/2+2]) rotate([0,0,8]) rotate([180,0,0]) bearing(bearing=false, drive_gear=true);
     
@@ -70,6 +74,52 @@ module assembled(inlet = 1, outlet = 1){
     translate([in*9, 0, in*2]) inlet_switch(left_length = 3, right_length = 2);
 }
 
+module bearing_fingergaurd(){
+    
+    //%render() translate([0,0,-ball_rad*2-wall/2-1]) bearing();
+    
+    finger_rad = 65;
+    num_rings = 5;
+    
+    difference(){
+        union(){
+            cylinder(r=finger_rad, h=wall);
+            translate([0,0,wall]) scale([1,1,wall/finger_rad]) sphere(r=finger_rad);
+        }
+        
+        translate([0,0,-.1]){
+            //screwhole
+            cylinder(r=m3_rad+slop, h=wall*3);
+            translate([0,0,wall]) cylinder(r=m3_cap_rad+slop, h=wall*3);
+            
+            //sector rings
+            sector_ring(in_rad = m3_cap_rad+slop+wall*1.25, out_rad = finger_rad*(1/num_rings), spokes = 5);
+            sector_ring(in_rad = finger_rad*(1/num_rings)+wall, out_rad = finger_rad*(2/num_rings), spokes = 7);
+            sector_ring(in_rad = finger_rad*(2/num_rings)+wall, out_rad = finger_rad*(3/num_rings), spokes = 11);
+            sector_ring(in_rad = finger_rad*(3/num_rings)+wall, out_rad = finger_rad*(4/num_rings), spokes = 13);
+            sector_ring(in_rad = finger_rad*(4/num_rings)+wall, out_rad = finger_rad-wall, spokes = 17);
+        }
+    }
+}
+
+module sector_ring(in_rad = 5, out_rad = 25, spokes = 5, height = 10){
+    slope = 2;
+    difference(){
+        //donut
+        difference(){
+            cylinder(r1=out_rad, r2=out_rad+slope, h=height);
+            translate([0,0,-.5]) cylinder(r1=in_rad, r2=in_rad-slope, h=height+1);
+        }
+        
+        //spokes
+        for(i=[rands(1,360/spokes,1)[0]:360/spokes:361]) rotate([0,0,i]) {
+            translate([0,125,-1]) hull(){
+                cube([wall, 250,.1], center=true);
+                translate([0,0,height+2]) cube([.1, 250,.1], center=true);
+            }
+        }
+    }
+}
 
 //this is a mockup so I could size it quickly :-)
 module gear_mockup(){
@@ -159,8 +209,8 @@ module bearing_outlet(){
             translate([in*8,0,in*4.5]) mirror([i,0,0]) track(rise=.75*in-2, run=4*in, solid=1, end_angle=90, end_scale=[1.33,1,1]);
             
             //hangers
-            hanger(solid=1, hole=[5,7], drop=in, rot=-30);
-            hanger(solid=1, hole=[8,7], drop=in*1.5, rot=-10);
+            hanger(solid=1, hole=[5,7], drop=in, rot=-20);
+            hanger(solid=1, hole=[8,6], drop=in*.5, rot=-10);
             
             //this prevents the balls from rolling out prematurely
             translate([in*4.5,0,in*3]) {
@@ -180,8 +230,8 @@ module bearing_outlet(){
             rotate([0,0,-90]) motorHoles(0, slot=2);
         }
         
-        hanger(solid=-1, hole=[5,7], drop=in, rot=-30);
-        hanger(solid=-1, hole=[8,7], drop=in*1.5, rot=-10);
+        hanger(solid=-1, hole=[5,7]);
+        hanger(solid=-1, hole=[8,6]);
     }
 }
 

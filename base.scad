@@ -17,6 +17,7 @@ slope_module();
 //this module angles to the other side, acts as a brake to slow down long runs.
 //rotate([-90,0,0])
 
+!inlet(height=2, width=2, length=1, outlet=INLET_SLOT, hanger_height=1);//, inset=0);
 
 
 *translate([in*10,0,-in*2]) 
@@ -26,175 +27,6 @@ reverse_module();
 *intersection(){
     rotate([-90,0,0]) inlet(length=4, outlet=NONE);
     rotate([-90,0,0]) translate([in*4,0,0]) mirror([1,0,0]) inlet(length=4);
-}
-
-//translate([in*8, 0, -in*4]) offset_slope_module();
-//translate([in*9+.1, 0, -in*7]) offset_slope_module();
-
-translate([in*13,0,-in*3]) rear_ball_return_inlet();
-!translate([in*9,0,-in*4]) rear_ball_return_outlet();
-
-
-module rear_ball_return_inlet(){
-    %translate([-in*12,wall,-in*5]) pegboard([12,12]);
-    difference(){
-        union(){
-            //inlet catcher - extends to the back, to deposit balls there.
-            inlet(length=1, hanger_height=0, outlet=REVERSE, height=1, width=4.5, board_inset = in*1.5);
-            
-            hull(){
-                translate([in-.1,-3*in,0]) cube([wall,in*4.5,in]);
-                translate([in-.1,-wall,-in/2]) cube([wall,wall,in/4]);
-            }
-            
-                   
-            //attach it to the pegboard
-            translate([0,0,0]) difference(){
-                hull(){
-                    hanger(solid=1, hole=[0,0], drop = in*2.5, rot=245);
-                    hanger(solid=1, hole=[-1,0], drop = in*3.25, rot=230);
-                    //cylinder(r=in, h=wall);
-                }
-                
-                hanger(solid=-1, hole=[0,0]);
-                hanger(solid=-1, hole=[-1,0]);
-                
-                //ball hole
-                hull(){
-                    translate([in/2,0,in*.45]) sphere(r=ball_rad+wall);
-                    translate([in/2,0,in*2]) sphere(r=ball_rad+wall);
-                }
-            }
-            
-            //hold a couple dowels underneath, to run the balls to the outlet
-            translate([in,in*1,-in*.75]) dowel_holder();
-        }
-        
-        translate([in,in*1,-in*.75]) dowel_holes();
-        
-        //flatten the far side for printing on
-        translate([100+in+wall/2,0,0]) cube([200,200,200], center=true);
-    }
-}
-
-module rear_ball_return_outlet(){
-    inset = .75;
-    %translate([-in*12,wall,-in*5]) pegboard([12,12]);
-    difference(){
-        union(){
-            //inlet catcher - extends to the back, to deposit balls there.
-            translate([0,in/2,0]) rotate([0,0,180]) inlet(length=1, hanger_height=0, outlet=REVERSE, height=1, width=2+inset, board_inset = in*1.5);
-            
-            mirror([1,0,0]) hull(){
-                translate([in-.1,-1*in,0]) cube([wall,in*2.75,in]);
-                translate([in-.1,wall*2+in*.25,-in/2]) cube([wall,wall,in/4]);
-            }
-            
-                   
-            //attach it to the pegboard
-            translate([0,wall*3+in*.25,0]) mirror([1,0,0]) difference(){
-                hull(){
-                    hanger(solid=1, hole=[0,0], drop = in*2.5, rot=245);
-                    hanger(solid=1, hole=[-1,0], drop = in*3.25, rot=230);
-                    
-                    //translate([in*.025,0,-in*.75-in*.125]) rotate([90,0,0]) cylinder(r=in, h=wall);
-                }
-                
-                hanger(solid=-1, hole=[0,0]);
-                hanger(solid=-1, hole=[-1,0]);
-                //translate([-in*2+1,-wall-.5,-in-1]) cube([in*2,wall+1,in*2]);
-                
-                //ball hole
-                hull(){
-                    translate([in/2,0,in*.45]) sphere(r=ball_rad+wall);
-                    translate([in/2,0,in*2]) sphere(r=ball_rad+wall);
-                }
-            }
-            
-            //front nub
-                        //attach it to the pegboard
-            translate([0,wall,0]) mirror([1,0,0]) difference(){
-                difference(){
-                    translate([in*.025,0,in/2]) rotate([90,0,0]) cylinder(r=in/4, h=wall);
-                    translate([in*.025,-in/2,0]) cube([in,in,in]);
-                }
-            }
-            
-            //hold a couple dowels underneath, to run the balls to the outlet
-            mirror([0,0,1]) translate([wall,in*1.25,-in*.75+in*0]) dowel_holder();
-        }
-        
-        //rods coming in :-)
-        mirror([0,0,1]) translate([wall,in*1.25,-in*.75+in*0]) dowel_holes(dowel_hole=wall*3+.1);
-        
-        //ball path
-        hull(){
-            translate([wall/2,in*1.25,in/2]) sphere(r=ball_rad+wall);
-            translate([wall/2,in*1.25,in]) sphere(r=ball_rad+wall);
-        }
-        
-        //flatten the far side for printing on
-        mirror([1,0,0]) translate([100+in+wall/2,0,0]) cube([200,200,200], center=true);
-    }
-}
-
-module dowel_holder(){
-    separation = 16;
-    
-    insert_angle = 30;
-    
-    difference(){
-        union(){
-            //the rod holders
-            for(i=[-separation/2,separation/2]) translate([0-wall/2,i,in/2+1]){
-                rotate([0,90,0]) cylinder(r=dowel_rad+wall, h=wall*2, center=true);
-            }
-            
-        }
-        
-        //the rods
-        for(i=[-separation/2,separation/2]) translate([0-wall/2,i,in/2+1]){
-            rotate([0,90,0]) cylinder(r=dowel_rad, h=200, center=true);
-            translate([wall*.75,0,0]) rotate([0,90,0]) cylinder(r1=dowel_rad, r2=dowel_rad*1.25, h=wall, center=true);
-            translate([-wall*.75,0,0]) rotate([0,90,0]) cylinder(r2=dowel_rad, r1=dowel_rad*1.25, h=wall, center=true);
-        }
-        
-        //rod insert area
-        //%translate([0-wall/2,-wall*3/4-dowel_rad+separation/2,in/2+2-dowel_rad-wall]) rotate([0,90,0]) cylinder(r=dowel_rad, h=wall*30, center=true);
-        translate([0-wall/2,0,in/2+1-separation/2]) difference(){
-            translate([0,0,3]) cube([separation, separation, separation], center=true);
-            translate([0,0,separation/2+3]) rotate([0,90,0]) scale([1,1,1.25]) sphere(r=4, h=40, center=true);
-            
-            for(i=[0,1]) mirror([0,i,0]) translate([0,separation/2,separation/2-dowel_rad-wall/2]) rotate([0,90,0]) cylinder(r=wall/2, h=40, center=true);
-            
-        }
-    }
-}
-
-module dowel_holes(dowel_hole=50){
-        separation = 16;
-    
-    insert_angle = 30;
-    
-    union(){
-        
-        //the rods
-        for(i=[-separation/2,separation/2]) translate([0-wall/2,i,in/2+1]){
-            #rotate([0,90,0]) cylinder(r=dowel_rad, h=dowel_hole, center=true);
-            translate([wall*.75,0,0]) rotate([0,90,0]) cylinder(r1=dowel_rad, r2=dowel_rad*1.25, h=wall, center=true);
-            translate([-wall*.75,0,0]) rotate([0,90,0]) cylinder(r2=dowel_rad, r1=dowel_rad*1.25, h=wall, center=true);
-        }
-        
-        //rod insert area
-        //%translate([0-wall/2,-wall*3/4-dowel_rad+separation/2,in/2+2-dowel_rad-wall]) rotate([0,90,0]) cylinder(r=dowel_rad, h=wall*30, center=true);
-        *translate([0-wall/2,0,in/2+1-separation/2]) difference(){
-            translate([0,0,3]) cube([separation, separation, separation], center=true);
-            translate([0,0,separation/2+3]) rotate([0,90,0]) scale([1,1,1.25]) sphere(r=4, h=40, center=true);
-            
-            for(i=[0,1]) mirror([0,i,0]) translate([0,separation/2,separation/2-dowel_rad-wall/2]) rotate([0,90,0]) cylinder(r=wall/2, h=40, center=true);
-            
-        }
-    }
 }
 
 //the size is the X and Y number of holes in the peg board.
@@ -318,7 +150,7 @@ module reverse_module(size = [4, -.5]){
  * hanger_height: Given in units of pegboard, how tall your hanger should be.  Set to 0 for no hanger.
  * board_inset: How far into the pegboard the inlet should jut - used for the ball return.  Does not affect the inlet holes, but does effect the outlet.
  */
-module inlet(height = 1, width = 3, length = 1, hanger_height=1, lift=5, outlet=INLET_HOLE, inset = inlet_x-ball_rad*2-wall*2, board_inset = 0){
+module inlet(height = 1, width = 3, length = 3, hanger_height=1, lift=5, outlet=INLET_HOLE, inset = inlet_x-ball_rad*2-wall*2, board_inset = 0){
     //slope = .25*in;
     
     side_supports = length-1;
@@ -337,7 +169,7 @@ module inlet(height = 1, width = 3, length = 1, hanger_height=1, lift=5, outlet=
             hull(){
                 cube([inlet_x,inlet_y,.1]);
                 translate([0,0,inlet_z-drop_top]) rotate([0,-lift_angle,0]) cube([inlet_x+inset,inlet_y,.1]);
-                translate([inlet_x,inlet_y-wall,inlet_z+lift]) cube([wall,wall,.1]);
+                #translate([inlet_x-wall,inlet_y-wall,inlet_z+lift]) cube([wall,wall,.1]);
                 //%translate([0,0,inlet_z-.1]) cube([inlet_x,inlet_y,.1]);
             }
             for(i=[0:length-1]){

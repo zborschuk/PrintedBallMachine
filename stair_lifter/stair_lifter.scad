@@ -5,7 +5,7 @@ use <../pins.scad>;
 //motor variables
 dflat=.2;
 shaft=5+slop;
-shaft_offset = 7;
+shaft_offset = -2;
 motor_rad = 33/2;
 motor_mount_rad = 38/2;
 m3_rad = 1.7;
@@ -13,45 +13,47 @@ m3_nut_rad = 3.5;
 
 //pin variables moved to configuration.scad
 
-stab_rad=4; //radius of stabilizer triangle
-
-%pegboard([10,10]);
-%cube([200,200,1],center=true);
-
-//rotate([-90,0,0])
-stair_inlet();
-
+stab_rad=7; //radius of stabilizer triangle
 cam_length = ball_rad*2+2;
-
-translate([peg_sep,-peg_sep,peg_sep-motor_rad-shaft_offset]) rotate([0,90,0]) difference(){
-    drive_shaft(length=in+.5, solid=1);
-    drive_shaft(length=in+.5, solid=0, dslot=true);
-}
-
-cam_angle = 180;
+cam_angle = 90+90;
 
 
+
+
+slope = -1;
+
+step_height = 10;
 
 cam_lift = max(0,ball_rad*1.5*cos(cam_angle-90));
 cam_lift_2 = max(0,ball_rad*1.5*cos(cam_angle+0));
 
-echo(cam_lift);
-echo(cam_lift_2);
+assembled();
 
 
-step_height = 10;
-
-translate([peg_sep*2+1,-peg_sep,peg_sep-motor_rad-shaft_offset]){
-    rotate([0,90,0]) rotate([0,0,cam_angle]) cam_shaft(width = peg_sep*2, length = cam_length, max_rad = ball_rad*2.5);
-    translate([cam_length,0,0]) rotate([0,90,0]) rotate([0,0,cam_angle+90]) cam_shaft(width = peg_sep*2, length = cam_length, max_rad = ball_rad*2.5);
+module assembled(){
+    %pegboard([12,12]);
+    
+    stair_inlet();
+    translate([peg_sep,-peg_sep,peg_sep-motor_rad-shaft_offset]) rotate([0,90,0]) difference(){
+        drive_shaft(length=in+.5, solid=1);
+        drive_shaft(length=in+.5, solid=0, dslot=true);
+    }
+    
+    translate([peg_sep*2+1,-peg_sep,peg_sep-motor_rad-shaft_offset]){
+        rotate([0,90,0]) rotate([0,0,cam_angle]) cam_shaft(width = peg_sep*2, length = cam_length, max_rad = ball_rad*2.5);
+        
+        translate([cam_length,0,0]) rotate([0,90,0]) rotate([0,0,cam_angle+120]) cam_shaft(width = peg_sep*2, length = cam_length, max_rad = ball_rad*2.5);
+    }
+    
+    translate([peg_sep*2+1,-wall-.33,peg_sep/2-3]){
+        translate([0,0,cam_lift+9.5]) stair_step(cam_height=3.5, length=cam_length, slope=slope);
+        
+        translate([cam_length,0,cam_lift_2+9.5]) stair_step(cam_height=2+step_height, length=cam_length, slope=-slope);
+    }
+    
+    translate([peg_sep*2+1,0,peg_sep]) guide_rail(cam_length=cam_length, step_height=step_height, num_cams=4);
+    
 }
-
-translate([peg_sep*2+1,-wall,peg_sep/2-3]){
-    translate([0,0,cam_lift]) stair_step(cam_height=14, length=cam_length);
-    translate([cam_length,0,cam_lift_2]) stair_step(cam_height=14+step_height, length=cam_length);
-}
-
-translate([peg_sep*2+1,0,peg_sep]) guide_rail(cam_length=cam_length, step_height=step_height, num_cams=4);
 
 
 module stair_inlet(){
@@ -61,29 +63,13 @@ module stair_inlet(){
             inlet(height=2, width=2, length=2, outlet=INLET_SLOT, hanger_height=1, inset=0);
             
             //add a motor mount underneath the inlet
-            rotate([0,0,-90]) translate([peg_sep,peg_sep,peg_sep-motor_rad]) {
-                %rotate([90,0,0]) cylinder(r=motor_rad, h=in);
-                for(i=[-motor_mount_rad, motor_mount_rad]){
-                    translate([i,0,0]) difference(){
-                        hull(){
-                            rotate([90,0,0]) rotate([0,0,45]) cylinder(r=m3_rad+wall*2, h=in/2, $fn=4);
-                            translate([0,0,motor_rad-wall]) rotate([90,0,0]) rotate([0,0,45]) cylinder(r=m3_rad+wall*2, h=in/2, $fn=4);
-                        }
-                        
-                        //motor mounting holes
-                        translate([0,.1,0]) rotate([90,0,0]) cylinder(r=m3_rad, h=peg_sep/2);
-                        translate([0,-peg_sep/2-.2,0]) rotate([90,0,0]) cylinder(r=m3_rad, h=peg_sep/2);
-                        
-                        //nut traps
-                        translate([0,-peg_sep/2+wall,0]) hull(){
-                            rotate([90,0,0]) cylinder(r1=m3_nut_rad, r2=m3_nut_rad+slop, h=wall+1, $fn=6);
-                            //translate([i,0,0]) rotate([90,0,0]) cylinder(r=m3_nut_rad, h=wall, $fn=6);
-                        }
-                    }
-                }
+            hull(){
+                translate([in,-in*1.5,in/2]) rotate([0,0,0]) rotate([0,90,0]) motorHoles(1, slot=5);
+                translate([0,-in/2,in]) rotate([0,90,0]) cylinder(r=in/2, h=wall);
             }
         }
-        rotate([0,0,-90]) translate([peg_sep,peg_sep+.1,peg_sep-motor_rad]) rotate([90,0,0]) cylinder(r=motor_rad, h=in);
+        
+        #translate([in,-in*1.5,in/2]) rotate([0,0,0]) rotate([0,90,0]) motorHoles(0, slot=5);
     }
 }
 
@@ -128,10 +114,12 @@ module drive_shaft(length=peg_sep*2, dslot = false, solid=1){
     }
 }
 
-module stair_step(cam_height=0, length = ball_rad*2-1){
+module stair_step(cam_height=0, length = ball_rad*2-1, slope = 3){
     height = ball_rad*2;
     inheight = ball_rad*2+wall;
     width = peg_sep*2-wall;
+    
+    slope_side = (slope>=0)?1:0;
     
     difference(){
         union(){
@@ -143,21 +131,26 @@ module stair_step(cam_height=0, length = ball_rad*2-1){
             
             //cam engagement
             difference(){
-                translate([length/3,-width,-peg_sep]) cube([length/3, width-wall,cam_height+peg_sep+wall]);
+                translate([length/2-wall/2,-width,-peg_sep]) cube([wall, width-wall,cam_height+peg_sep+wall]);
                 translate([length/3,-width/2,-cam_height-peg_sep]) scale([1,1.5,1]) rotate([0,90,0]) cylinder(r=cam_height+peg_sep,h=length, center=true, $fn=90);
             }
         }
+        
         translate([0,0,cam_height]) difference(){
             hull(){
-                translate([-.1,-width+wall,wall*1.5]) cube([.1,width-wall*2,inheight]);
-                translate([length+.1,-width+wall,wall*.75]) cube([.1,width-wall*2,height]);
+                translate([-.1,-width+wall,wall*1.5+abs(slope)]) cube([.1,width-wall*2,inheight]);
+                translate([length+.1,-width+wall,wall*.75+abs(slope)]) cube([.1,width-wall*2,height]);
+                
+                translate([-.1,-width*slope_side-wall+wall*2*slope_side,wall*1.5-0*abs(slope)]) cube([.1,.1,inheight]);
+                translate([length+.1,-width*slope_side-wall+wall*2*slope_side,wall*.75-0*abs(slope)]) cube([.1,.1,inheight]);
             }
+            
             //leave a bump so we have room for the stabilizer
-            translate([length/2,0,0]) scale([2.25,1,1]) rotate([0,0,22.5]) cylinder(r=stab_rad+slop, h=height*2, $fn=8);
+            translate([length/2,0,0]) scale([1.5,1,1]) rotate([0,0,360/(10+7.5)]) cylinder(r=stab_rad+slop, h=height*2, $fn=5);
         }
         
-        //cutout for the slot
-        translate([length/2,0,0]) rotate([0,0,90]) cylinder(r=stab_rad, h=height*3, $fn=3);
+        //cutout for the stabilizer slot
+        translate([length/2,0,0]) rotate([0,0,90]) cylinder(r=stab_rad+slop, h=height*10, $fn=3, center=true);
     }
 }
 
@@ -199,7 +192,10 @@ module guide_rail(cam_length=cam_length, step_height=step_height, num_cams=3){
             
             //rails
             translate([0,-wall-.5,0]) for(i=[0:num_cams-1]){
-                translate([cam_length/2+cam_length*i,0,0]) rotate([0,0,90]) cylinder(r=stab_rad-slop*2, h=height, $fn=3);
+                translate([cam_length/2+cam_length*i,0,0]) rotate([0,0,90]) minkowski(){
+                    translate([0,0,1]) cylinder(r=stab_rad-slop*4, h=height-2, $fn=3);
+                    cylinder(r=slop, h=1);
+                }
             }
             
         }

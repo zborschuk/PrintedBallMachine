@@ -2,28 +2,38 @@ include<configuration.scad>
 use <pins.scad>
 use <base.scad>
 
-part = 5;
+part = 7;
 
 //laid out for printing
 if(part == 0)   //peg
     translate([0,0,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90]) peg(peg=PEG_HOOK);
+
 if(part == 1)   //double length peg - good for supporting bigger modules
     translate([0,0,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90]) peg(peg=PEG_HOOK, peg_units=2);
+
 if(part == 2)   //triple length peg - good for supporting bigger modules
     translate([0,0,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90]) peg(peg=PEG_HOOK, peg_units=3);
+
 if(part == 3)   //peg that catches marbles
     translate([0,0,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90]) 
         ball_return_peg();
+
 if(part == 4)   //stand for a 12x12 board
     translate([0,0,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90])
         peg_stand();
 
 if(part == 5)   //stand for a 12x12 board
     translate([0,0,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90])
-        peg_stand(height=5, front_drop=2);
+        peg_stand(height=5, front_drop=1);
 
 if(part == 6)   //joins two boards together
     rotate([90,0,0]) peg_joiner();
+
+if(part == 7) //insertable peg
+    rotate([90,0,0]) insert_peg(nub=0);
+
+if(part == 8) //insertable peg  to join handles, or pegboard to pegboard.
+    rotate([90,0,0]) insert_peg(nub=0, thick1 = peg_thick, thick2=peg_thick);
 
 if(part == 10){
     //peg for printing
@@ -42,6 +52,84 @@ if(part == 10){
     //stand for a 12x12 board
     translate([0,peg_thick+80,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90])
         peg_stand();
+}
+
+//nub is the number of units away to put a nub.  zero means no nub.
+module insert_peg(nub = 0, thick1 = peg_thick, thick2=wall){
+    peg_len = peg_sep*.5 + nub*peg_sep;
+    peg_gap = 2.5;
+    peg_shoulder_thick = 1;
+    
+    front_rad = 6;
+    cutoff=1;
+    
+    %translate([0,0,-thick1/2]) cube([peg_thick,peg_thick,thick1], center=true);
+    %translate([0,0,wall+thick2/2]) cube([peg_thick,peg_thick,thick2], center=true);
+    
+    clip_scale = in/(front_rad*2);
+    
+    //so the stack is, from the back: tapered wall holder
+    difference(){
+        union(){
+            clip_insert(thick=thick1);
+            
+            //front offset
+            cylinder(r=front_rad, h=wall);
+            
+            //attach the ball module
+            translate([0,0,wall-.1]) mirror([0,0,1]) clip_insert(thick = thick2);
+            
+            //spring
+            scale([1,clip_scale,1]) translate([0,front_rad,0]) cylinder(r=front_rad, h=wall);
+            
+            if(nub > 0){
+            }
+        }
+        
+        //center gap
+        cube([peg_gap,front_rad*3,200], center=true);
+        
+        //spring
+        scale([1,clip_scale,1]) translate([0,front_rad,0]) cylinder(r=front_rad-wall*.75, h=wall*3, center=true);
+        
+        //through hole for locking it in place
+        cylinder(r=m3_rad, h=200, center=true, $fn=12);
+        
+        //flatten the top for printing
+        mirror([0,1,0]) translate([0,5+peg_rad-cutoff,0]) cube([50,10,50], center=true);
+    }
+}
+
+module clip_insert(thick=peg_thick){
+    peg_len = peg_sep*.5 + nub*peg_sep;
+    peg_gap = 2.5;
+    peg_shoulder_rad = peg_rad+peg_gap/2;
+    peg_shoulder_thick = 1;
+    
+    front_rad = 5;
+    cutoff=.75;
+    
+    overlap = peg_shoulder_thick/4;
+    
+    translate([0,0,-peg_shoulder_thick-thick])
+    difference(){
+        union(){
+            echo(peg_rad);
+            //rear shoulder
+            translate([0,0,overlap]) hull(){
+                cylinder(r1=peg_rad, r2=peg_shoulder_rad, h=peg_shoulder_thick/2);
+                translate([0,0,peg_shoulder_thick/2-.1]) cylinder(r2=peg_rad, r1=peg_shoulder_rad, h=peg_shoulder_thick/2+.2);
+            }
+            
+            //shaft
+            translate([0,0,peg_shoulder_thick]) cylinder(r=peg_rad+slop, h=thick+.1);
+        }
+        
+        //center gap
+        cube([peg_gap,20,20], center=true);
+        //flatten the peg sides
+        for(i=[0,1]) mirror([0,i,0]) translate([0,5+peg_rad-cutoff,0]) cube([50,10,50], center=true);
+    }
 }
 
 //added the option to make the peg have a locking pin, instead of a hook.
