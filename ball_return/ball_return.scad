@@ -1,6 +1,6 @@
-include<configuration.scad>
-use <base.scad> 
-use <pins.scad>
+include<../configuration.scad>
+use <../base.scad> 
+use <../pins.scad>
 
 part = 10;
 

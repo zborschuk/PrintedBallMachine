@@ -3,6 +3,7 @@ use <../base.scad>;
 use <bearing.scad>;
 use <../screw_drop/screw_drop.scad>;
 use <../screw_drop/bowl_drop.scad>;
+use <../ball_return/ball_return.scad>;
 
 peg_sep = 25.4;
 
@@ -12,7 +13,7 @@ hole_rad = 8;
 lift_rad = in*3;
 num_balls = 17;
 
-part = 3;
+part = 10;
 
 //next section
 %translate([in*12,0,in*1]) inlet();
@@ -45,33 +46,36 @@ if(part==10){
     assembled();
 }
 
-//assembled unit.  1 == inlet left, 1 = outlet right
+//assembled unit, 12x12, for sale.  Includes all parts except mounting pegs.
+//This module requires 14 pegs, at least 6 of which are the insert type.
 module assembled(inlet = 1, outlet = 1){
     %pegboard([12,12]);
     
+    //frilly inlet
+    translate([0,0,peg_sep*2]) screw_drop(inlet_length=2, height = 1.5);
+    
+    //direct inlet
+    //translate([0,0,0]) offset_slope_module(size = [3, -.5], offset=1);
+    
     if(inlet==1)
-        bearing_inlet();
+        translate([in*4,0,0]) bearing_inlet();
     else{
-        mirror([1,0,0])
+        translate([in*4,0,0]) mirror([1,0,0])
         bearing_inlet();
     }
     
-    translate([in*4.5,-in*1-1-ball_rad*2-wall,in*4]) rotate([90,0,0]) mirror([0,0,1]) rotate([0,0,30]) bearing();
+    translate([in*8.5,-in*1-1-ball_rad*2-wall,in*4]) rotate([90,0,0]) mirror([0,0,1]) rotate([0,0,30]) bearing();
     
-    translate([in*4.5,-in*1-1-ball_rad*2-wall,in*4+1]) rotate([90,0,0]) bearing_fingergaurd();
+    translate([in*8.5,-in*1-1-ball_rad*2-wall,in*4+1]) rotate([90,0,0]) bearing_fingergaurd();
     
     *translate([in/2, -in, in*3+6]) rotate([90,0,0])  rotate([0,0,90]) translate([0,0,1+ball_rad*2+wall/2+2]) rotate([0,0,8]) rotate([180,0,0]) bearing(bearing=false, drive_gear=true);
     
-    bearing_outlet();
+    translate([in*4,0,0]) bearing_outlet();
     
-    //three options for exit:
-    //translate([in*8,0,in*4]) screw_drop(inlet_length=2, exit=-1);
-    //translate([in*8,0,in*4]) bowl_drop(inlet_length=3, height = 2, rad=1.5, height_scale=.8*in, lower=4.9);
-    //this just passes on max height to the next module
-    translate([in*8,0,in*3]) offset_slope_module(size = [3, -.5], offset=1);
+    //rear recirculator
+    translate([in*12,0,in*5]) rear_ball_return_inlet();
     
-    //recirculating switch - allows the module to recirculate or pass on
-    translate([in*9, 0, in*2]) inlet_switch(left_length = 3, right_length = 2);
+    translate([0,0,in*4]) rear_ball_return_outlet();
 }
 
 module bearing_fingergaurd(){

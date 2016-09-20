@@ -74,7 +74,7 @@ module offset_slope_module(size = [4, -.5], offset=1){
     
     difference(){
         union(){
-            inlet(height=3);
+            inlet(height=3, length=1);
             
             translate([in-inset,0,in*2])  difference(){
                 track(rise=(size[1]*2)*in, run=(size[0]*2)*in, z_out=z_out, solid=1, end_angle=0);
@@ -150,7 +150,7 @@ module reverse_module(size = [4, -.5]){
  * hanger_height: Given in units of pegboard, how tall your hanger should be.  Set to 0 for no hanger.
  * board_inset: How far into the pegboard the inlet should jut - used for the ball return.  Does not affect the inlet holes, but does effect the outlet.
  */
-module inlet(height = 1, width = 3, length = 3, hanger_height=1, lift=5, outlet=INLET_HOLE, inset = inlet_x-ball_rad*2-wall*2, board_inset = 0){
+module inlet(height = 1, width = 3, length = 1, hanger_height=1, lift=5, outlet=INLET_HOLE, inset = inlet_x-ball_rad*2-wall*2, board_inset = 0){
     //slope = .25*in;
     
     side_supports = length-1;
