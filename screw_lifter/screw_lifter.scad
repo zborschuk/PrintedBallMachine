@@ -25,7 +25,7 @@ if(part==10){
     assembled();
 }
 
-angle = 55;
+angle = 45;
 
 module assembled(){
 
@@ -36,16 +36,64 @@ module assembled(){
     
     translate([peg_sep*2,screw_offset,0]) rotate([0,angle,0]) translate([0,0,-screw_pitch]) screw_segment();
     translate([peg_sep*2,screw_offset,0]) rotate([0,angle,0]) translate([0,0,3*screw_pitch]) screw_segment();
+    translate([peg_sep*2,screw_offset,0]) rotate([0,angle,0]) translate([0,0,7*screw_pitch]) screw_segment();
+    
+    translate([peg_sep*9,0,peg_sep*7]) screw_outlet();
 }
 
+module screw_outlet(){
+    
+    difference(){
+        union(){
+            inlet(length=3, inset=0);
+        }
+        
+        //angled hole for the screw
+        translate([0,screw_offset, 0]) hull() {
+            translate([0,0,-peg_sep/2]) cylinder(r=screw_rad+1, h=100);
+            rotate([0,30,0]) translate([0,0,-peg_sep]) cylinder(r=screw_rad+1, h=100);
+            rotate([0,60,0]) translate([0,0,-peg_sep]) cylinder(r=screw_rad+1, h=100);
+        }
+    }
+}
+
+module slide_motor_mount(angle_inset = 20, max_angle = 75, motor_width = 20){
+    
+    zip_width = 3;
+    zip_length = 5;
+    
+    sweep_angle = max_angle + 5;
+    rad = angle_inset + motor_width+zip_width*4;
+    
+    difference(){
+        //body
+        intersection(){
+            rotate([90,0,0]) cylinder(r=rad, h=wall);
+            translate([-50,0,-50]) cube([100,100,100], center=true);
+            rotate([0,90-sweep_angle,0]) translate([-50,0,-50]) cube([100,100,100], center=true);
+        }
+        
+        //slots for zip ties to attach the motor
+        for(i=[5:360/100:max_angle-zip_width]) rotate([0,-i,0])  {
+            translate([-angle_inset,0,0]) cube([zip_width, wall*3, zip_length], center=true);
+            translate([-angle_inset-motor_width-zip_width,0,0]) cube([zip_width, wall*3, zip_length], center=true);
+        }
+    }
+}
+
+
 module screw_inlet(){
+    motor_width = 20;
+    
     difference(){
         union(){
             inlet(length=2.5, inset=0, outlet=NONE);
             
-            //motor mount
             //motor hangs under the inlet, with an adustable angle centered on the hole in the floor.
-            translate([peg_sep*2,screw_offset,0]) rotate([0,-90+angle,0]) rotate([0,90,0]) rotate([0,0,-90]) translate([0,0,-21]) motor_holes();
+            %translate([peg_sep*2,screw_offset,0]) rotate([0,-90+angle,0]) rotate([0,90,0]) rotate([0,0,-90]) translate([0,0,-21]) motor_holes();
+            
+            //the motor mount uses a zip tie to hold the motor in, allowing it to pivot to angle the screw a bit.
+            translate([peg_sep*2.5,0,-.1]) slide_motor_mount(angle_inset = 30);
         }
         
         //angled hole for the screw
@@ -60,8 +108,8 @@ module screw_inlet(){
 }
 
 //length is measured in revolutions!
-module screw_segment(length = 4){  
-    pitch = screw_pitch;
+module screw_segment(length = 4, starts = 2){  
+    pitch = screw_pitch*starts;
     
     screw_inner_rad = (7.5+wall)/2;
     difference(){
@@ -70,7 +118,7 @@ module screw_segment(length = 4){
             cylinder(r=screw_inner_rad, h=length*pitch);
             
             //we'll need a screw, too...
-            translate([0,0,-pitch]) screw_threads(length = (length+1)*pitch, pitch = pitch);
+            for(i=[1:starts]) rotate([0,0,i*(360/starts)]) translate([0,0,-pitch]) screw_threads(length = (length+1)*pitch, pitch = pitch);
             
             //and we should connect to the next screw along
             translate([0,0,length*pitch-.1]) d_slot(shaft=7.5-slop*2, height=10-slop*2, dflat=.4+.3-slop, double_d=true);
