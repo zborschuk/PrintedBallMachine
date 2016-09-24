@@ -2,7 +2,7 @@ include<configuration.scad>
 use <pins.scad>
 use <base.scad>
 
-part = 7;
+part = 5;
 
 //laid out for printing
 if(part == 0)   //peg
@@ -24,7 +24,7 @@ if(part == 4)   //stand for a 12x12 board
 
 if(part == 5)   //stand for a 12x12 board
     translate([0,0,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90])
-        peg_stand(height=5, front_drop=1);
+        peg_stand(height=5, front_drop=2);
 
 if(part == 6)   //joins two boards together
     rotate([90,0,0]) peg_joiner();
