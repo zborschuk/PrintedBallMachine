@@ -2,7 +2,7 @@ include<configuration.scad>
 use <pins.scad>
 use <base.scad>
 
-part = 5;
+part = 9;
 
 //laid out for printing
 if(part == 0)   //peg
@@ -35,6 +35,9 @@ if(part == 7) //insertable peg
 if(part == 8) //insertable peg  to join handles, or pegboard to pegboard.
     rotate([90,0,0]) insert_peg(nub=0, thick1 = peg_thick, thick2=peg_thick);
 
+if(part == 9) //double insertable peg to join pegboards together
+    rotate([90,0,0]) insert_peg_double(nub=1);
+
 if(part == 10){
     //peg for printing
     translate([0,peg_thick,-peg_sep/2+peg_rad-1]) rotate([0,0,90]) rotate([90,0,0]) rotate([0,0,90]) peg(peg=PEG_HOOK);
@@ -56,8 +59,8 @@ if(part == 10){
 
 //nub is the number of units away to put a nub.  zero means no nub.
 module insert_peg(nub = 0, thick1 = peg_thick, thick2=wall){
-    peg_len = peg_sep*.5 + nub*peg_sep;
-    peg_gap = 2.5;
+    peg_len = (nub == 0)?peg_sep*.75:nub*peg_sep;
+    peg_gap = 2.25;
     peg_shoulder_thick = 1;
     
     front_rad = 6;
@@ -66,23 +69,24 @@ module insert_peg(nub = 0, thick1 = peg_thick, thick2=wall){
     %translate([0,0,-thick1/2]) cube([peg_thick,peg_thick,thick1], center=true);
     %translate([0,0,wall+thick2/2]) cube([peg_thick,peg_thick,thick2], center=true);
     
-    clip_scale = in/(front_rad*2);
+    clip_scale = peg_len/(front_rad*2);
     
     //so the stack is, from the back: tapered wall holder
     difference(){
         union(){
-            clip_insert(thick=thick1);
+            clip_insert(thick=thick1, peg_gap=peg_gap);
             
             //front offset
             cylinder(r=front_rad, h=wall);
             
             //attach the ball module
-            translate([0,0,wall-.1]) mirror([0,0,1]) clip_insert(thick = thick2);
+            translate([0,0,wall-.1]) mirror([0,0,1]) clip_insert(thick = thick2, peg_gap=peg_gap);
             
             //spring
             scale([1,clip_scale,1]) translate([0,front_rad,0]) cylinder(r=front_rad, h=wall);
             
             if(nub > 0){
+                translate([0,nub*in,0]) sphere(r=peg_rad);
             }
         }
         
@@ -93,17 +97,30 @@ module insert_peg(nub = 0, thick1 = peg_thick, thick2=wall){
         scale([1,clip_scale,1]) translate([0,front_rad,0]) cylinder(r=front_rad-wall*.75, h=wall*3, center=true);
         
         //through hole for locking it in place
-        cylinder(r=m3_rad, h=200, center=true, $fn=12);
+        cylinder(r=m3_rad-slop/2, h=200, center=true, $fn=12);
         
         //flatten the top for printing
         mirror([0,1,0]) translate([0,5+peg_rad-cutoff,0]) cube([50,10,50], center=true);
     }
 }
 
-module clip_insert(thick=peg_thick){
+module insert_peg_double(nub = 1, thick1 = peg_thick, thick2=wall){
+    cutoff=1;
+    
+    width = peg_sep-wall*2.5;
+    offset = -(width-peg_sep)/2;
+    
+    union(){
+        insert_peg(nub=nub, thick1 = thick1, thick2=thick2);
+        translate([peg_sep, 0, 0]) insert_peg(nub=nub, thick1 = thick1, thick2=thick2);
+        
+        translate([offset,-peg_rad+cutoff,0]) cube([width,in*.5,wall]);
+    }
+}
+
+module clip_insert(thick=peg_thick, peg_gap = 2.5){
     peg_len = peg_sep*.5 + nub*peg_sep;
-    peg_gap = 2.5;
-    peg_shoulder_rad = peg_rad+peg_gap/2;
+    peg_shoulder_rad = peg_rad+peg_gap/2+.125;
     peg_shoulder_thick = 1;
     
     front_rad = 5;
@@ -114,7 +131,6 @@ module clip_insert(thick=peg_thick){
     translate([0,0,-peg_shoulder_thick-thick])
     difference(){
         union(){
-            echo(peg_rad);
             //rear shoulder
             translate([0,0,overlap]) hull(){
                 cylinder(r1=peg_rad, r2=peg_shoulder_rad, h=peg_shoulder_thick/2);

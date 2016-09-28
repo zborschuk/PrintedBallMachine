@@ -1,13 +1,12 @@
 include <../configuration.scad>;
 use <../base.scad>;
 
-part = 2;
+part = 10;
 
 screw_rad = ball_rad+wall*2;
 screw_pitch = ball_rad*2+wall*2;
 screw_offset = -wall-screw_rad-.9;
-screw_offset = -in*1.5;
-screw_length = 4.8;
+screw_length = 4.6;
 
 //next section
 %translate([in*12,0,in*10]) inlet();
@@ -45,7 +44,7 @@ module assembled(){
     
     screw_inlet();
     
-    translate([peg_sep*2,screw_offset,0]) rotate([0,angle,90]) translate([0,0,0]) screw_segment(length=screw_length, starts=1, top=ROUND);
+    translate([peg_sep*2,screw_offset,0]) rotate([0,angle,90]) translate([0,0,0]) screw_segment(length=screw_length, starts=2, top=ROUND);
     //translate([peg_sep*2,screw_offset,0]) rotate([0,angle,0]) translate([0,0,3*screw_pitch+2]) screw_segment();
     //translate([peg_sep*2,screw_offset,0]) rotate([0,angle,0]) translate([0,0,7*screw_pitch]) screw_segment();
     
@@ -101,17 +100,6 @@ module screw_inlet(){
         union(){
             inlet(length=3, inset=0, outlet=NONE, hanger_height=2);
             
-            //strengthen the hangers
-            difference(){
-                union(){
-                    hanger(solid=1, hole=[1,3], drop = in*3, rot=-60);
-                    hanger(solid=1, hole=[3,3], drop = in*3, rot=60);
-                }
-                hanger(solid=-1, hole=[1,3]);
-                hanger(solid=-1, hole=[3,3]);
-            }
-            
-            
             //motor hangs under the inlet, with an adustable angle centered on the hole in the floor.
             %translate([peg_sep*2,screw_offset,0]) rotate([0,-90+angle,0]) rotate([0,90,0]) rotate([0,0,-90]) translate([0,0,-21]) motor_holes();
             
@@ -151,45 +139,31 @@ module screw_inlet(){
         
         
         //ball entry to the guides
-        translate([in*2,screw_offset,ball_rad+wall*2]) for(i=[0,1]) rotate([0,0,i*180]) translate([-screw_rad,0,0]) {
+        translate([in*2,screw_offset,ball_rad+wall*2]) for(i=[0,1]) mirror([i,0,0]) translate([screw_rad,0,0]) {
             hull(){
                 sphere(r=ball_rad+wall);
-                translate([screw_rad,-in*3-screw_offset+ball_rad+wall*2,wall*2]) sphere(r=ball_rad+wall);
+                //rotate([0,0,-15])
+                translate([-screw_rad/2,-in*3-screw_offset+ball_rad+wall*2,wall*2]) sphere(r=ball_rad+wall);
             }
-        }
-        
-        translate([in*2,screw_offset,ball_rad+wall*2]) for(i=[0,1]) mirror([0,i,0]) {
-            hull(){
-                translate([0,-in*3-screw_offset+ball_rad+wall*2,wall*2]) sphere(r=ball_rad+wall);
-                
-                translate([-in*1.5,-in*3-screw_offset+ball_rad+wall*2,wall*3]) sphere(r=ball_rad+wall);
-                translate([in*.5,-in*3-screw_offset+ball_rad+wall*2,wall*3]) sphere(r=ball_rad+wall);
-            }
-            
-            hull(){
-                translate([-in*1.5,-in*3-screw_offset+ball_rad+wall*2,wall*3]) sphere(r=ball_rad+wall);
-                translate([-in*1.5,0,wall*3.5]) sphere(r=ball_rad+wall);
-            }
-            
         }
         
         //get the ball to the guides
-        *hull(){
+        hull(){
             translate([in*2,screw_offset,ball_rad+wall*2])
             translate([screw_rad/2,-in*3-screw_offset+ball_rad+wall*2,wall*2])
-                sphere(r=ball_rad+wall);
+                #sphere(r=ball_rad+wall);
             translate([in/2,screw_offset,ball_rad+wall*2])
             translate([0,-in*3-screw_offset+ball_rad+wall*2,wall*2.5])
-                sphere(r=ball_rad+wall);
+                #sphere(r=ball_rad+wall);
         }
         
-        *hull(){
+        hull(){
             translate([in/2,screw_offset,ball_rad+wall*2])
             translate([0,-in*3-screw_offset+ball_rad+wall*2,wall*2.5])
-                sphere(r=ball_rad+wall);
+                #sphere(r=ball_rad+wall);
             
             translate([in/2,-in/2,ball_rad+wall*5])
-                sphere(r=ball_rad+wall);
+                #sphere(r=ball_rad+wall);
         }
         
         //motor mount
