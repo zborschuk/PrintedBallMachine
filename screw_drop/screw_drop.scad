@@ -29,8 +29,22 @@ module screw_drop(inlet_length=1, exit=1, height = 2.5){
     
     translate([0,0,in])
     difference(){
-    union(){
+        union(){
             inlet(height=1, length=inlet_length, hanger_height=1);
+        
+            //prevents excess speed on the ball in
+            translate([(inlet_length-1)*in,-wall,0]) hull(){
+                //big corner
+                #translate([-wall*3,0,0]) cube([wall*3,wall,wall]);
+                
+                //bottom
+                #translate([0,-in/2,0]) cube([wall/2,in/2,wall]);
+                
+                //side
+                cube([wall/2,wall,in]);
+            }
+        
+        
             //inlet screw down
             translate([peg_sep*inlet_length,0,0]){
                 track(rise=-drop*2, run=2*in, solid=1, end_angle=90);

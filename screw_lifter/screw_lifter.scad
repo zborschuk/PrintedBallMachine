@@ -1,7 +1,10 @@
 include <../configuration.scad>;
 use <../base.scad>;
+use <../clank_drop/clank_drop.scad>;
+use <../screw_drop/bowl_drop.scad>;
+use <../ball_return/ball_return.scad>;
 
-part = 2;
+part = 10;
 
 screw_rad = ball_rad+wall*2;
 screw_pitch = ball_rad*2+wall*2;
@@ -12,9 +15,9 @@ screw_length = 4.8;
 //next section
 %translate([in*12,0,in*10]) inlet();
 
-%translate([in*4, 0, in*1]) offset_slope_module();
+%translate([in*3, 0, in*1]) offset_slope_module();
 
-//laid out for printing
+//oriented out for printing
 if(part == 0)
     screw_inlet();
 if(part == 1)
@@ -22,10 +25,13 @@ if(part == 1)
 if(part == 2)
     screw_segment(length=screw_length, starts=1, top=ROUND);
 if(part == 3)
-    screw_outlet();
+    rotate([-90,0,0]) bowl_drop(inlet_length=5, height = 2-.125, rad=2.5, height_scale=.55*in, lower=11.3);
 if(part == 4)
-    screw_guide();
-
+    rotate([-90,0,0]) offset_slope_module(size = [3,-.5]);
+if(part == 5)
+    rotate([0,90,0]) rear_ball_return_inlet();
+if(part == 6)
+    rotate([0,-90,0]) rear_ball_return_outlet();
 
 if(part==10){
     assembled();
@@ -43,17 +49,26 @@ module assembled(){
     %pegboard([12,12]);
     %translate([peg_sep*3.8,-ball_rad,peg_sep*3.2]) sphere(r=ball_rad);
     
-    screw_inlet();
+    //first lifter
+    translate([0,0,peg_sep*5]) screw_inlet();
+    translate([peg_sep*2,screw_offset,peg_sep*5]) rotate([0,angle,90]) translate([0,0,0]) screw_segment(length=screw_length, starts=1, top=ROUND);
     
-    translate([peg_sep*2,screw_offset,0]) rotate([0,angle,90]) translate([0,0,0]) screw_segment(length=screw_length, starts=1, top=ROUND);
-    //translate([peg_sep*2,screw_offset,0]) rotate([0,angle,0]) translate([0,0,3*screw_pitch+2]) screw_segment();
-    //translate([peg_sep*2,screw_offset,0]) rotate([0,angle,0]) translate([0,0,7*screw_pitch]) screw_segment();
+    //second lifter
+    translate([peg_sep*3,0,peg_sep*8]) screw_inlet();
+    translate([peg_sep*5,screw_offset,peg_sep*8]) rotate([0,angle,90]) translate([0,0,0]) screw_segment(length=screw_length, starts=2, top=ROUND);
     
-    translate([peg_sep*9,0,peg_sep*7]) screw_outlet();
+    //bowl drop
+    translate([peg_sep*6,0,peg_sep*10]) bowl_drop(inlet_length=5, height = 2-.125, rad=2.5, height_scale=.55*in, lower=11.3);
+    
+    //catch the ball out of the spinner
+    translate([peg_sep*8, 0, peg_sep*6]) offset_slope_module(size = [3,-.5]);
+    
+    //ball return
+    translate([in*12,0,in*7]) rear_ball_return_inlet();
+    translate([0,0,in*6]) rear_ball_return_outlet();
 }
 
 module screw_outlet(){
-    
     difference(){
         union(){
             inlet(length=3, inset=0);
@@ -97,18 +112,21 @@ module screw_inlet(){
     motor_width = 20;
     open_angle=0;
     
+    drop = .25*in/2;
+    back_drop = .25*in/4;
+    
     difference(){
         union(){
-            inlet(length=3, inset=0, outlet=NONE, hanger_height=2);
+            inlet(length=3, inset=0, outlet=NONE, hanger_height=4);
             
             //strengthen the hangers
             difference(){
                 union(){
-                    hanger(solid=1, hole=[1,3], drop = in*3, rot=-60);
-                    hanger(solid=1, hole=[3,3], drop = in*3, rot=60);
+                    hanger(solid=1, hole=[1,5], drop = in*4, rot=-33);
+                    hanger(solid=1, hole=[3,5], drop = in*4, rot=33);
                 }
-                hanger(solid=-1, hole=[1,3]);
-                hanger(solid=-1, hole=[3,3]);
+                hanger(solid=-1, hole=[1,5]);
+                hanger(solid=-1, hole=[3,5]);
             }
             
             
@@ -119,7 +137,7 @@ module screw_inlet(){
             *translate([peg_sep*2.5,0,-.1]) slide_motor_mount(angle_inset = 30);
             
             //guide track
-           translate([in*2,in/2+screw_offset,0]) for(i=[0,1]) mirror([i,0,0]) rotate([0,0,open_angle]) translate([screw_rad+ball_rad+wall*1.5,0,0]) rotate([0,-90,0]) track(rise = 0, run = in*(4+i));
+           translate([in*2,in/2+screw_offset,0]) for(i=[0,1]) mirror([i,0,0]) rotate([0,0,open_angle]) translate([screw_rad+ball_rad+wall*1.5,0,0]) rotate([0,-90,0]) track(rise = 0, run = in*(4.25+i*.125));
             
             //balls
             *translate([in*3-ball_rad-wall,screw_offset,in*3+10]) sphere(r=ball_rad);
@@ -128,17 +146,30 @@ module screw_inlet(){
            mirror([0,1,0]) cube([in*3, in*3, in/2+1]);
            
            //top exit track
-           translate([in*1.25,in/2+screw_offset+in*.15,in*4]) scale([1,1.3,1]) {
-               track(rise = -in/4, run = in*3);
+           //rear
+           translate([peg_sep*3,in/2+screw_offset+in,in*4-back_drop*4]) mirror([1,0,0]) track(rise=back_drop*2, run=in*2, solid=1, end_angle=90);
+           translate([peg_sep*1,-in/2+screw_offset+1,in*4-back_drop]) mirror([0,0,0]) rotate([0,0,90]) track(rise=-back_drop, run=in, solid=1, end_angle=0);
+           
+           //front
+           translate([peg_sep*2,in/2+screw_offset-.75,in*4-back_drop*2]) mirror([1,1,0]) track(rise=-back_drop*2, run=in*2, solid=1, end_angle=90);
+           
+           //old exit - straight shot
+           translate([in*1.25,in/2+screw_offset+in*.15,in*3.5]) scale([1,1.3,1]) {
+               //track(rise = -in/4, run = in*3);
                hull(){
-                   translate([in*.75, -track_rad-wall, track_rad/2]) cube([in*1.5, track_rad*2+wall*2, track_rad], center=true);
+                   translate([in*1.333+in/2-5, -track_rad-wall, track_rad/2-1]) cube([track_rad/2, track_rad*5, track_rad], center=true);
                    translate([in*.75, -track_rad-wall, -track_rad*1.5]) cube([in*1.5, track_rad*2, track_rad], center=true);
                }
            }
         }
         
-        //top exit track hollow
-        translate([in*1.5,in/2+screw_offset+in*.15,in*4]) scale([1,1.3,1]) track(rise = -in/4, run = in*3, solid=-1);
+        //rear exit hole
+        translate([peg_sep*1,-in/2+screw_offset+1,in*4-back_drop]) mirror([0,0,0]) rotate([0,0,90]) track(rise=-back_drop, run=in, solid=1, end_angle=0, solid=-1);
+        //front exit hole
+        translate([peg_sep*2,in/2+screw_offset-.75,in*4-back_drop*2]) mirror([1,1,0]) track(rise=-back_drop*2, run=in*2, solid=1, end_angle=90, solid=-1);
+        
+        //old exittrack hollow
+        *translate([in*1.5,in/2+screw_offset+in*.15,in*4]) scale([1,1.3,1]) track(rise = -in/4, run = in*3, solid=-1);
         
         //guide track hollow
            translate([in*2,screw_offset,wall*2]) hull() for(i=[0,1]) mirror([i,0,0]) rotate([0,0,open_angle]) translate([screw_rad-2.3,0,0]) {
@@ -163,37 +194,17 @@ module screw_inlet(){
                 translate([0,-in*3-screw_offset+ball_rad+wall*2,wall*2]) sphere(r=ball_rad+wall);
                 
                 translate([-in*1.5,-in*3-screw_offset+ball_rad+wall*2,wall*3]) sphere(r=ball_rad+wall);
-                translate([in*.5,-in*3-screw_offset+ball_rad+wall*2,wall*3]) sphere(r=ball_rad+wall);
+                //translate([in*.5,-in*3-screw_offset+ball_rad+wall*2,wall*3]) sphere(r=ball_rad+wall);
             }
             
             hull(){
                 translate([-in*1.5,-in*3-screw_offset+ball_rad+wall*2,wall*3]) sphere(r=ball_rad+wall);
                 translate([-in*1.5,0,wall*3.5]) sphere(r=ball_rad+wall);
-            }
-            
-        }
-        
-        //get the ball to the guides
-        *hull(){
-            translate([in*2,screw_offset,ball_rad+wall*2])
-            translate([screw_rad/2,-in*3-screw_offset+ball_rad+wall*2,wall*2])
-                sphere(r=ball_rad+wall);
-            translate([in/2,screw_offset,ball_rad+wall*2])
-            translate([0,-in*3-screw_offset+ball_rad+wall*2,wall*2.5])
-                sphere(r=ball_rad+wall);
-        }
-        
-        *hull(){
-            translate([in/2,screw_offset,ball_rad+wall*2])
-            translate([0,-in*3-screw_offset+ball_rad+wall*2,wall*2.5])
-                sphere(r=ball_rad+wall);
-            
-            translate([in/2,-in/2,ball_rad+wall*5])
-                sphere(r=ball_rad+wall);
+            }  
         }
         
         //motor mount
-        #translate([in*2,screw_offset,0]) rotate([0,0,180]) motor_holes();
+        translate([in*2,screw_offset,0]) rotate([0,0,180]) motor_holes();
         
                 
         // hole for the screw
