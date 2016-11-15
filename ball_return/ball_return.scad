@@ -2,7 +2,7 @@ include<../configuration.scad>
 use <../base.scad> 
 use <../pins.scad>
 
-part = 10;
+part = 4;
 
 if(part == 0)
     rotate([0,90,0]) rear_ball_return_inlet();
@@ -10,10 +10,15 @@ if(part == 0)
 if(part == 2)
     rotate([0,90,0]) rear_ball_return_inlet(width=3);
 
-if(part == 1)
-    rotate([0,270,0]) rear_ball_return_outlet();
+if(part == 3)
+    translate([0,0,0]) rotate([0,270,0]) rear_ball_return_outlet();
+
+if(part == 4)
+    translate([0,0,peg_thick/2-slop]) rotate([90,0,0]) ball_return_peg();
 
 if(part == 10){
+    %translate([-in*12,wall,-in*5]) pegboard([12,12]);
+    
     translate([in*8, 0, -in*4]) offset_slope_module();
     translate([in*9+.1, 0, -in*7]) offset_slope_module();
 
@@ -21,10 +26,48 @@ if(part == 10){
     translate([in*9,0,-in*4]) rear_ball_return_outlet();
 }
 
+module ball_return_peg(){
+    //%translate([wall+peg_thick/2,in/2,in/2])
+    %translate([in/2,-in/2,-peg_thick/2-wall]) rotate([90,0,0]) rear_ball_return_inlet();
+    
+    shoulder_rad = peg_rad+wall/2-slop*2;
+    min_rad = 1;
+    slit_rad = 1;
+    
+    difference(){
+        union(){
+            //core
+            cylinder(r=peg_rad-slop, h=peg_thick+wall*2, center=true);
+            
+            //flare the ends
+            for(i=[0:1]) mirror([0,0,i]) {
+                translate([0,0,peg_thick/2+wall/2]) cylinder(r1=peg_rad-slop, r2=shoulder_rad, h=wall/2+.05);
+                translate([0,0,peg_thick/2+wall]) cylinder(r2=peg_rad, r1=shoulder_rad, h=wall/2);
+            }
+            
+            //handle
+            translate([0,0,peg_thick/2+wall]) minkowski(){
+                cylinder(r1=peg_rad-slop-min_rad, r2=peg_rad+wall/2-min_rad, h=in/3);
+                sphere(r=min_rad);
+            }
+        }
+        
+        //slit
+        hull(){
+            rotate([90,0,0]) cylinder(r=slit_rad, h=peg_rad*4, center=true);
+            translate([0,0,-peg_thick/2-wall*1.5]) rotate([90,0,0]) cylinder(r=slit_rad+slop, h=peg_rad*4, center=true);
+        }
+        
+        //screwhole
+        mirror([0,0,1]) translate([0,0,-in/4]) cylinder(r1=1.25, r2=1.5, h=in*.75);
+        
+        //flatten the top/bottom
+        for(i=[0:1]) mirror([0,i,0]) translate([0,peg_rad+25-slop,0]) cube([50,50,50], center=true);
+    }
+}
 
 module rear_ball_return_inlet(width=2){
     inset = .75;
-    %translate([-in*12,wall,-in*5]) pegboard([12,12]);
     difference(){
         union(){
             //inlet catcher - extends to the back, to deposit balls there.
@@ -53,8 +96,28 @@ module rear_ball_return_inlet(width=2){
                 }
             }
             
+            //newfangled pegboard attachment system
+            pegboard_attach();
             
-            //attach it to the pegboard
+            //%pegboard_attach_old();
+
+            
+            //hold a couple dowels underneath, to run the balls to the outlet
+            translate([in,in*1.25,-in*.66666]) dowel_holder();
+        }
+        
+        translate([in,in*1.25,-in*.66666]) dowel_holes();
+        
+        
+        
+        //flatten the far side for printing on
+        translate([100+in+wall/2,0,0]) cube([200,200,200], center=true);
+    }
+}
+
+//pegboard attachment
+module pegboard_attach_old(){
+                //attach it to the pegboard
             translate([0,0,0]) difference(){
                 hull(){
                     hanger(solid=1, hole=[0,0], drop = in*2.5, rot=245);
@@ -79,23 +142,42 @@ module rear_ball_return_inlet(width=2){
                     translate([in*.025,-in/2,0]) cube([in,in,in]);
                 }
             }
+}
+
+module pegboard_attach(){
+    //so we're going to use two holes, but the far one's a double-sided bump
+    difference(){
+        translate([0,wall*1+peg_thick/2, 0]) 
+        for(i=[0,1]) mirror([0,i,0]) translate([0,wall*1+peg_thick/2,0]) {
+            hull(){
+                hanger(solid=1, hole=[0,0], drop = in*2.5, rot=245);
+                hanger(solid=1, hole=[-1,0], drop = in*3.25, rot=230);
+            }
             
-            //hold a couple dowels underneath, to run the balls to the outlet
-            translate([in,in*1.25,-in*.66666]) dowel_holder();
+            translate([-in*1.5,-wall,-in*.5]) hull(){
+                translate([0,0,0]) scale([1,.8,1]) sphere(r=wall);
+                translate([0,-wall/2,0]) scale([.8,.4,.8]) sphere(r=wall);
+            }
         }
         
-        translate([in,in*1.25,-in*.66666]) dowel_holes();
+        //peg hole in the rear
+        translate([0,wall*1+peg_thick/2, 0]) for(i=[0,1]) mirror([0,i,0]) translate([0,wall*1+peg_thick/2,0])
+            hanger(solid=-1, hole=[0,0]);
         
-        
-        
-        //flatten the far side for printing on
-        translate([100+in+wall/2,0,0]) cube([200,200,200], center=true);
+        //ball hole
+        hull(){
+            translate([in/2,-wall,in*.45]) sphere(r=ball_rad+wall);
+            translate([in/2,-wall,in*2]) sphere(r=ball_rad+wall);
+            
+            translate([in/2,wall*2+peg_thick,in*.45]) sphere(r=ball_rad+wall);
+            translate([in/2,wall*2+peg_thick,in*2]) sphere(r=ball_rad+wall);
+            
+        }
     }
 }
 
 module rear_ball_return_outlet(){
     inset = .75;
-    %translate([-in*12,wall,-in*5]) pegboard([12,12]);
     difference(){
         union(){
             //inlet catcher - extends to the back, to deposit balls there.
@@ -131,24 +213,8 @@ module rear_ball_return_outlet(){
             }
                    
             //attach it to the pegboard
-            translate([0,wall*3+in*.25,0]) mirror([1,0,0]) difference(){
-                hull(){
-                    hanger(solid=1, hole=[0,0], drop = in*2.5, rot=245);
-                    hanger(solid=1, hole=[-1,0], drop = in*3.25, rot=230);
-                    
-                    //translate([in*.025,0,-in*.75-in*.125]) rotate([90,0,0]) cylinder(r=in, h=wall);
-                }
-                
-                hanger(solid=-1, hole=[0,0]);
-                hanger(solid=-1, hole=[-1,0]);
-                //translate([-in*2+1,-wall-.5,-in-1]) cube([in*2,wall+1,in*2]);
-                
-                //ball hole
-                hull(){
-                    translate([in/2,0,in*.45]) sphere(r=ball_rad+wall);
-                    translate([in/2,0,in*2]) sphere(r=ball_rad+wall);
-                }
-            }
+            mirror([1,0,0]) pegboard_attach();
+            %pegboard_attach_2_old();
             
             //front nub
             translate([0,wall,0]) mirror([1,0,0]) difference(){
@@ -175,6 +241,27 @@ module rear_ball_return_outlet(){
         mirror([1,0,0]) translate([100+in+wall/2,0,0]) cube([200,200,200], center=true);
     }
 }
+
+module pegboard_attach_2_old(){
+    translate([0,wall*3+in*.25,0]) mirror([1,0,0]) difference(){
+                hull(){
+                    hanger(solid=1, hole=[0,0], drop = in*2.5, rot=245);
+                    hanger(solid=1, hole=[-1,0], drop = in*3.25, rot=230);
+                    
+                    //translate([in*.025,0,-in*.75-in*.125]) rotate([90,0,0]) cylinder(r=in, h=wall);
+                }
+                
+                hanger(solid=-1, hole=[0,0]);
+                hanger(solid=-1, hole=[-1,0]);
+                //translate([-in*2+1,-wall-.5,-in-1]) cube([in*2,wall+1,in*2]);
+                
+                //ball hole
+                hull(){
+                    translate([in/2,0,in*.45]) sphere(r=ball_rad+wall);
+                    translate([in/2,0,in*2]) sphere(r=ball_rad+wall);
+                }
+            }
+        }
 
 module dowel_holder(){
     separation = 16;
