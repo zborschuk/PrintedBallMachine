@@ -8,7 +8,15 @@ openscad bearing_lifter.scad -D part=6 -o bl_switch.stl &
 openscad bearing_lifter.scad -D part=7 -o bl_bowl.stl &
 openscad bearing_lifter.scad -D part=8 -o bl_slope.stl &
 
+openscad ../ball_return/ball_return.scad -D part=0 -o breturn_inlet.stl &
+openscad ../ball_return/ball_return.scad -D part=2 -o breturn_outlet.stl &
+openscad ../ball_return/ball_return.scad -D part=4 -o breturn_peg.stl &
+
 openscad ../peg.scad -D part=0 -o peg_1x.stl &
 openscad ../peg.scad -D part=1 -o peg_2x.stl &
 openscad ../peg.scad -D part=2 -o peg_3x.stl &
+openscad ../peg.scad -D part=7 -o insert_peg.stl &
+
 openscad ../peg.scad -D part=4 -o stand.stl &
+
+openscad ../handle.scad -D part=0 -o handle.stl &

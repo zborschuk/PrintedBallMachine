@@ -12,11 +12,6 @@ screw_offset = -wall-screw_rad-.9;
 screw_offset = -in*1.5;
 screw_length = 4.8;
 
-//next section
-%translate([in*12,0,in*10]) inlet();
-
-%translate([in*3, 0, in*1]) offset_slope_module();
-
 //oriented out for printing
 if(part == 0)
     screw_inlet();

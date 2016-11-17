@@ -7,8 +7,10 @@ hole_sep = 25.4;
 
 %cube([in*1.5,in*1.5,in/2], center=true);
 
+part = 0;
 
-handle();
+if(part == 0)
+    handle();
 
 width = 4.5;
 height = 3;
