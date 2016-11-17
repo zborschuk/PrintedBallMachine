@@ -10,8 +10,9 @@ Mechanical Parts:
 Parts to Print:
 1 * bl_inlet.stl
 1 * bl_outlet.stl
-1 * bl_bearing.stl
+1 * bl_lift_gear.stl
 1 * bl_drive_gear.stl
+1 * bl_spiral.stl
 1 * bl_guard.stl
 
 
@@ -22,11 +23,10 @@ Standard Parts
 1 * breturn_outlet.stl
 2 * breturn_peg.stl
 4 * peg_1x.stl
-2 * peg_2x.stl
-4 * peg_3x.stl
-1 * insert_peg.stl
+1 * peg_2x.stl
+6 * peg_3x.stl
 
 Notes:
 Motor direction matters!
-sl_inlet uses long pegs where it can.
-sl_bowl_catch.stl needs an insert peg on its outlet.
+bl_inlet uses long pegs where it can.
+You need a sideways support peg for the bl_outlet, under the fang-like curve.

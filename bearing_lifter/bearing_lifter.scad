@@ -51,26 +51,24 @@ if(part==10){
 module assembled(inlet = 1, outlet = 1){
     %pegboard([12,12]);
     
-    //frilly inlet
-    translate([0,0,peg_sep*2]) screw_drop(inlet_length=2, height = 1.5);
+    //frilly outlet
+    translate([in*8,0,peg_sep*6]) screw_drop(inlet_length=2, height = 1.5);
     
     //direct inlet
     //translate([0,0,0]) offset_slope_module(size = [3, -.5], offset=1);
     
     if(inlet==1)
-        translate([in*4,0,0]) bearing_inlet();
+        translate([0,0,in*3]) bearing_inlet();
     else{
-        translate([in*4,0,0]) mirror([1,0,0])
+        translate([0,0,in*3]) mirror([1,0,0])
         bearing_inlet();
     }
     
-    translate([in*8.5,-in*1-1-ball_rad*2-wall,in*4]) rotate([90,0,0]) mirror([0,0,1]) rotate([0,0,30]) bearing();
+    translate([in*3.5,-in*1-1-ball_rad*2-wall,in*8]) rotate([90,0,0]) mirror([0,0,1]) rotate([0,0,30]) bearing();
     
-    translate([in*8.5,-in*1-1-ball_rad*2-wall,in*4+1]) rotate([90,0,0]) bearing_fingergaurd();
+    translate([in*3.5,-in*1-1-ball_rad*2-wall,in*8+1]) rotate([90,0,0]) bearing_fingergaurd();
     
-    *translate([in/2, -in, in*3+6]) rotate([90,0,0])  rotate([0,0,90]) translate([0,0,1+ball_rad*2+wall/2+2]) rotate([0,0,8]) rotate([180,0,0]) bearing(bearing=false, drive_gear=true);
-    
-    translate([in*4,0,0]) bearing_outlet();
+    translate([0,0,in*3]) bearing_outlet();
     
     //rear recirculator
     translate([in*12,0,in*5]) rear_ball_return_inlet();
