@@ -35,7 +35,7 @@ module assembled(){
 module handle_mount(){
     taper = in/32;
     
-    height = .75*in;
+    height = .75*in-wall;   //the gap should be 1" exactly.  The handle protrudes 1/4" behind the pegboard, but the handle mount is mounted by pegboard hooks - so it's 1"-1/4"-wall.
     
     inset = 1;
     
