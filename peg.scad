@@ -2,7 +2,7 @@ include<configuration.scad>
 use <pins.scad>
 use <base.scad>
 
-part = 9;
+part = 4;
 
 //laid out for printing
 if(part == 0)   //peg
@@ -289,7 +289,7 @@ module ball_return_peg(){
     }
 }
 
-module peg_stand(peg_units = 1, thick = in*.6, height=3, front_drop=1, base_length = in*4){
+module peg_stand(peg_units = 1, thick = in*.75, height=3, front_drop=1, base_length = in*5){
     cutoff=1;
     
     
@@ -315,9 +315,10 @@ module peg_stand(peg_units = 1, thick = in*.6, height=3, front_drop=1, base_leng
             }
             
             //peg in the front brace
-            translate([0,0,-peg_sep*front_drop]){
-                rotate([90,0,0]) translate([0,0,-wall-in/4]) cylinder(r1=peg_rad, r2=peg_rad-slop, h=peg_thick-.333);
-                translate([0,wall+in/4-peg_thick+.333,0]) sphere(r=peg_rad-slop);
+            translate([0,0,-peg_sep*front_drop]) hull(){
+                //rotate([90,0,0]) translate([0,0,-wall-in/4]) cylinder(r1=peg_rad, r2=peg_rad-slop, h=peg_thick-.333);
+                translate([0,peg_thick,0]) sphere(r=peg_rad);
+                translate([0,peg_thick/2+peg_rad/2,0]) scale([.9,.75,.9]) sphere(r=peg_rad-slop);
             }
             
             //base
@@ -329,9 +330,10 @@ module peg_stand(peg_units = 1, thick = in*.6, height=3, front_drop=1, base_leng
                         translate([0,-base_length/2,0]) 
                         rotate([90,0,0]) translate([-thick/2,-thick/2,0])cube([thick, thick, wall]);
                         translate([0,-(wall+in/4)/2,0]) rotate([90,0,0]) translate([-thick/2,-thick/2,0]) cube([thick, thick, wall]);
-                        translate([0,-(wall+in/4)/2,brace_height]) rotate([90,0,0]) translate([-thick/2,-thick/2,0]) cube([thick, thick, wall]);
+                        #translate([0,-(wall+in/4)/2,brace_height]) rotate([90,0,0]) translate([-thick/2,-thick/2,0]) cube([thick, thick, wall]);
                     }
                 }
+                
                 translate([0,-base_length/2-wall,brace_height+thick/2]) scale([1,(base_length-wall*2)/in,(2*brace_height+thick)/in]) rotate([0,90,0]) cylinder(r=in/2, h=20, center=true, $fn=60);
             }
         }
@@ -340,7 +342,13 @@ module peg_stand(peg_units = 1, thick = in*.6, height=3, front_drop=1, base_leng
         //cut off side for easier printing
         translate([-200-peg_rad+cutoff,0,0]) cube([400,400,400], center=true);
         
-        //cut off bottom so it can standor easier printing
+        //cut off bottom so it can stand
         translate([-100-peg_rad+cutoff,0,0]) cube([200,200,200], center=true);
+        
+        //cut off the back to prevent interference
+                //cut off bottom so it can stand
+        translate([0,100+in+peg_thick,0]) cube([200,200,200], center=true);
+        
+        %translate([0,in/4,-in*4]) cube([in,in,in]);
     }
 }

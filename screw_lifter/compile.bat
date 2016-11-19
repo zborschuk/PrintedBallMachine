@@ -6,7 +6,7 @@ openscad screw_lifter.scad -D part=4 -o sl_bowl_catch.stl &
 
 
 openscad ../ball_return/ball_return.scad -D part=0 -o breturn_inlet.stl &
-openscad ../ball_return/ball_return.scad -D part=2 -o breturn_outlet.stl &
+openscad ../ball_return/ball_return.scad -D part=3 -o breturn_outlet.stl &
 openscad ../ball_return/ball_return.scad -D part=4 -o breturn_peg.stl &
 
 openscad ../peg.scad -D part=0 -o peg_1x.stl &
