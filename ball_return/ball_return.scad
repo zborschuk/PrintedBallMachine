@@ -161,9 +161,11 @@ module pegboard_attach(){
                 hanger(solid=1, hole=[-1,0], drop = in*3.25, rot=230);
             }
             
+            //bump
             translate([-in*1.5,-wall,-in*.5]) hull(){
-                translate([0,0,0]) scale([1,.7,1]) sphere(r=wall);
-                translate([0,-wall/3,0]) scale([.8,.4,.8]) sphere(r=wall);
+                translate([0,0,0]) scale([1,.8,1]) sphere(r=peg_rad);
+                translate([0,-wall/4,0]) scale([.95,.5,.95]) sphere(r=peg_rad);
+                translate([0,-wall/2,0]) scale([.8,.4,.8]) sphere(r=wall);
             }
         }
         

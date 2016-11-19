@@ -17,3 +17,4 @@ openscad ../peg.scad -D part=7 -o insert_peg.stl &
 openscad ../peg.scad -D part=4 -o stand.stl &
 
 openscad ../handle.scad -D part=0 -o handle.stl &
+openscad ../handle.scad -D part=1 -o handle_mount.stl &
