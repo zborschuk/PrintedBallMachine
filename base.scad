@@ -502,6 +502,45 @@ module track_curve_2(angle=90, drop=-10, track_angle = -80){
         }
     }
 }
+module track_curve_3(num_steps=5, angle=90, drop=-10, track_angle = -80){
+    //translate([0,0,-peg_sep/2-.5]) cube([peg_sep+1, peg_sep+1, peg_sep+1]);
+    //translate([0,0,-peg_sep/2-.5]) rotate([0,0,angle]) cube([peg_sep, peg_sep, peg_sep]);
+    
+    
+    extra_drop = drop/(num_steps+1)*tan(90-track_angle);
+    mirror([1,1,0])
+    rotate([90,0,0]) 
+    difference(){
+        union(){
+            //the inlet is extra-long, to meet the slope this attaches to.
+            hull(){
+                rotate([0,0,90]) translate([0*drop/(num_steps+1),in/2+.1,extra_drop]) track_slice_2();
+                rotate([0,0,90]) translate([1*drop/(num_steps+1),in/2+.1,0]) track_slice_2();
+            }
+                
+            //the curved angle
+            for(i=[0:num_steps-1]){
+                hull(){
+                    rotate([i*angle/num_steps,0,0]) rotate([0,0,90]) translate([(i+1)*drop/(num_steps+1),i/4+in/2+.1,0]) track_slice_2();
+                    rotate([(i+1)*angle/num_steps,0,0]) rotate([0,0,90]) translate([(i+2)*drop/(num_steps+1),i/4+in/2+.1,0]) track_slice_2();
+                }
+            }
+        }
+        //inlet
+        hull(){
+            rotate([0,0,90]) translate([0*drop/(num_steps+1),in/2+.1,extra_drop]) track_hollow_slice_2();
+            rotate([0,0,90]) translate([1*drop/(num_steps+1),in/2+.1,0]) track_hollow_slice_2();
+        }
+        
+        //curved part
+        for(i=[0:num_steps-1]){
+            hull(){
+                rotate([i*angle/num_steps,0,0]) rotate([0,0,90]) translate([(i+1)*drop/(num_steps+1),i/4+in/2+.1,0]) track_hollow_slice_2();
+                rotate([(i+1)*angle/num_steps,0,0]) rotate([0,0,90]) translate([(i+2)*drop/(num_steps+1),i/4+in/2+.1,0]) track_hollow_slice_2();
+            }
+        }
+    }
+}
 
 
 //section of track.
